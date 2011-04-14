@@ -8,7 +8,7 @@ Ryan Dahl.
 Requirements:
 -------------
 
-- Python 2.7 or superior.
+- Python 2.6 or sup.
 - Cython if you need to rebuild the C code
 
 

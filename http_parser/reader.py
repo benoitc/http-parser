@@ -16,14 +16,14 @@ except ImportError:
 
 if sys.version_info < (2, 7, 0, 'final'):
     # in python 2.6 socket.recv_into doesn't support bytesarray
+    import array
     def _readinto(sock, b):
-        l = len(b)
-        m = memoryview(b)
-        buf = array.array('c', ' ' * l)
+        buf = array.array('c', ' ' * io.DEFAULT_BUFFER_SIZE)
         while True:
             try:
-                recved = sock.recv_into(b)
-                m[0:recved] = buf.tostring()
+                recved = sock.recv_into(buf)
+                b[0:recved] = buf.tostring()
+		return recved
             except socket.error as e:
                 n = e.args[0]
                 if n == EINTR:
@@ -88,9 +88,6 @@ class IterReader(io.RawIOBase):
     def readinto(self, b):
         self._checkClosed()
         self._checkReadable()
-   
-        if _readinto is not None:
-            return _readinto(self._sock, b)
 
         l = len(b)
         try:
@@ -138,6 +135,10 @@ class SocketReader(io.RawIOBase):
     def readinto(self, b):
         self._checkClosed()
         self._checkReadable()
+
+	if _readinto is not None:
+            return _readinto(self._sock, b)
+
         while True:
             try:
                 return self._sock.recv_into(b)

@@ -99,7 +99,7 @@ class StringReader(IterReader):
         IterReader.__init__(self, iterable)
 
         
-_blocking_errnos = { EAGAIN, EWOULDBLOCK }
+_blocking_errnos = ( EAGAIN, EWOULDBLOCK )
 
 class SocketReader(io.RawIOBase):
     """ a raw reader for sockets or socket like interface. based 

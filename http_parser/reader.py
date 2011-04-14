@@ -7,11 +7,33 @@
 from errno import EINTR, EAGAIN, EWOULDBLOCK 
 import io
 import socket
+import sys
 import types
 try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
+
+if sys.version_info < (2, 7, 0, 'final'):
+    # in python 2.6 socket.recv_into doesn't support bytesarray
+    def _readinto(sock, b):
+        l = len(b)
+        m = memoryview(b)
+        buf = array.array('c', ' ' * l)
+        while True:
+            try:
+                recved = sock.recv_into(b)
+                m[0:recved] = buf.tostring()
+            except socket.error as e:
+                n = e.args[0]
+                if n == EINTR:
+                    continue
+                if n in _blocking_errnos:
+                    return None
+                raise
+else:
+    _readinto = None
+
 
 
 class HttpBodyReader(io.RawIOBase):
@@ -66,7 +88,10 @@ class IterReader(io.RawIOBase):
     def readinto(self, b):
         self._checkClosed()
         self._checkReadable()
-    
+   
+        if _readinto is not None:
+            return _readinto(self._sock, b)
+
         l = len(b)
         try:
             chunk = self.iter.next()

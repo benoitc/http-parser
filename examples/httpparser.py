@@ -9,6 +9,7 @@ def main():
     p = HttpParser()
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     body = []
+    header_done = False
     try:
         s.connect(('gunicorn.org', 80))
         s.send("GET / HTTP/1.1\r\nHost: gunicorn.org\r\n\r\n")
@@ -22,8 +23,9 @@ def main():
             nparsed = p.execute(data, recved)
             assert nparsed == recved
 
-            if p.is_headers_complete():
+            if p.is_headers_complete() and not header_done:
                 print p.get_headers()
+                header_done = True
 
             if p.is_partial_body():
                 body.append(p.recv_body())

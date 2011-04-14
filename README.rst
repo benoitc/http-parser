@@ -17,7 +17,7 @@ Installation
 
 ::
 
-    $ pip install http-parser (not yet)
+    $ pip install http-parser
 
 Usage
 -----

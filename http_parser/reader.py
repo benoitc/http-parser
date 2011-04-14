@@ -34,8 +34,6 @@ if sys.version_info < (2, 7, 0, 'final'):
 else:
     _readinto = None
 
-
-
 class HttpBodyReader(io.RawIOBase):
     """ Raw implementation to stream http body """
 

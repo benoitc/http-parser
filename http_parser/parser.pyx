@@ -4,6 +4,7 @@
 # See the NOTICE for more information.
 
 from libc.stdlib cimport *
+import os
 from urllib import unquote
 
 cdef extern from "Python.h":
@@ -59,9 +60,11 @@ cdef extern from "http_parser.h" nogil:
     char *http_method_str(http_method)
 
 
-cdef int on_path_cb(http_parser *parser, char *at, size_t length):
+cdef int on_path_cb(http_parser *parser, char *at,
+        size_t length):
     res = <object>parser.data
     value = PyString_FromStringAndSize(at, length)
+
     res.path = value
     res.environ['PATH_INFO'] = unquote(value)
     
@@ -86,7 +89,6 @@ cdef int on_url_cb(http_parser *parser, char *at,
     value = PyString_FromStringAndSize(at, length)
     res.url = value
     res.environ['RAW_URI'] = value
-    
     if 'on_url' in res.callbacks:
         res.callbacks['on_url'](value)
     return 0
@@ -125,7 +127,7 @@ cdef int on_header_value_cb(http_parser *parser, char *at,
     
     # update wsgi environ
     key =  res._last_field.upper().replace('-','_')
-    if key not in ("CONTENT_LENGTH", "CONTENT_TYPE"):
+    if key not in ("CONTENT_LENGTH", "CONTENT_TYPE", "SCRIPT_NAME"):
         key = 'HTTP_' + key
 
     res.environ[key] = res.environ.get(key, '') + header_value
@@ -305,6 +307,23 @@ cdef class HttpParser:
         """ get WSGI environ based on the current request """
         environ = initial or {}
         environ.update(self._data.environ)
+
+        script_name = environ.get('HTTP_SCRIPT_NAME', 
+                os.environ.get("SCRIPT_NAME", ""))
+
+        if script_name:
+            path_info = self.get_path() 
+            path_info = path_info.split(script_name, 1)[1]
+            environ.update({
+                'PATH_INFO': path_info,
+                'SCRIPT_NAME': script_name})
+
+        if environ.get('HTTP_X_FORWARDED_PROTOCOL', '').lower() == "ssl":
+            environ['wsgi.url_scheme']= "https"
+        elif environ.get('HTTP_X_FORWARDED_SSL', '').lower() == "on":
+            environ['wsgi.url_scheme'] = "https"
+        else:
+            environ['wsgi.url_scheme'] = "http"
 
         # add missing environ var
         environ.update({

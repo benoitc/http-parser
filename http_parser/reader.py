@@ -18,7 +18,7 @@ if sys.version_info < (2, 7, 0, 'final'):
     # in python 2.6 socket.recv_into doesn't support bytesarray
     import array
     def _readinto(sock, b):
-        buf = array.array('c', ' ' * io.DEFAULT_BUFFER_SIZE)
+        buf = array.array('c', ' ' * len(b))
         while True:
             try:
                 recved = sock.recv_into(buf)

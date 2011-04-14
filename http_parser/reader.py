@@ -23,7 +23,7 @@ if sys.version_info < (2, 7, 0, 'final'):
             try:
                 recved = sock.recv_into(buf)
                 b[0:recved] = buf.tostring()
-		        return recved
+                return recved
             except socket.error as e:
                 n = e.args[0]
                 if n == EINTR:

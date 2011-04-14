@@ -1,0 +1,14 @@
+*.gem
+*.swp
+*.pyc
+*#*
+build
+dist
+setuptools-*
+.svn/*
+.DS_Store
+*.so
+http_parser.egg-info
+nohup.out
+.coverage
+doc/.sass-cache

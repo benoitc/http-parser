@@ -1,0 +1,7 @@
+include .gitignore
+include LICENSE
+include NOTICE
+include README.rst
+include THANKS
+recursive-include http_parser *
+recursive-include examples *

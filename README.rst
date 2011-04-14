@@ -8,7 +8,7 @@ Ryan Dahl.
 Requirements:
 -------------
 
-- Python 2.6 or superior.
+- Python 2.7 or superior.
 - Cython if you need to rebuild the C code
 
 
@@ -17,7 +17,7 @@ Installation
 
 ::
 
-    $ pip install http-parser
+    $ pip install http-parser (not yet)
 
 Usage
 -----

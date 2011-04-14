@@ -12,7 +12,9 @@ from imp import load_source
 import os
 import sys
 
-
+if not hasattr(sys, 'version_info') or \
+        sys.version_info < (2, 6, 0, 'final'):
+    raise SystemExit("http-parser requires Python 2.6x or later")
 
 CLASSIFIERS = [
         'Development Status :: 4 - Beta',

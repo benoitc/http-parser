@@ -13,6 +13,7 @@ try:
 except ImportError:
     from StringIO import StringIO
 
+
 class HttpBodyReader(io.RawIOBase):
     """ Raw implementation to stream http body """
 

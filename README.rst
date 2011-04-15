@@ -1,9 +1,11 @@
 http-parser
 -----------
 
-HTTP request/response parser for Python in C based on http-parser_ from
-Ryan Dahl.
+HTTP request/response parser for Python in C under MIT License, based on
+http-parser_ from Ryan Dahl.
 
+
+Project url: https://github.com/benoitc/http-parser/
 
 Requirements:
 -------------
@@ -11,13 +13,17 @@ Requirements:
 - Python 2.6 or sup.
 - Cython if you need to rebuild the C code
 
-
 Installation
 ------------
 
 ::
 
     $ pip install http-parser
+
+Or install from source::
+
+    $ git clone git://github.com/benoitc/http-parser.git
+    $ cd http-parser && python setup.py install
 
 Usage
 -----
@@ -110,6 +116,12 @@ Example of HttpParser:
 
 
 You can find more docs in the code (or use a doc genererator).
+
+
+Copyright
+---------
+
+2011 (c) Benoît Chesneau <benoitc@e-engura.org>
 
 
 .. http-parser_ https://github.com/ry/http-parser

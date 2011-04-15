@@ -17,9 +17,6 @@ def main():
         print p.headers()
         print "WSGI environ"
         print "------------\n"
-
-        print p.wsgi_environ()
-
         print p.wsgi_environ()
         print ""
         print "Body"

@@ -126,10 +126,7 @@ cdef int on_header_value_cb(http_parser *parser, char *at,
     header_value = PyString_FromStringAndSize(at, length)
     
     # update wsgi environ
-    key =  res._last_field.upper().replace('-','_')
-    if key not in ("CONTENT_LENGTH", "CONTENT_TYPE", "SCRIPT_NAME"):
-        key = 'HTTP_' + key
-
+    key =  'HTTP_%s' % res._last_field.upper().replace('-','_')
     res.environ[key] = res.environ.get(key, '') + header_value
 
     # add to headers
@@ -305,8 +302,18 @@ cdef class HttpParser:
 
     def get_wsgi_environ(self, initial=None):
         """ get WSGI environ based on the current request """
-        environ = initial or {}
-        environ.update(self._data.environ)
+
+        if initial is None:
+            initial = {}
+
+        environ = self._data.environ
+        environ.update(initial)
+
+        # clean special keys
+        for key in ("CONTENT_LENGTH", "CONTENT_TYPE", "SCRIPT_NAME"):
+            hkey = "HTTP_%s" % key
+            if hkey in environ:
+                environ[key] = environ.pop(hkey)
 
         script_name = environ.get('HTTP_SCRIPT_NAME', 
                 os.environ.get("SCRIPT_NAME", ""))

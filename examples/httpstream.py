@@ -9,18 +9,8 @@ def main():
     try:
         s.connect(('gunicorn.org', 80))
         s.send("GET / HTTP/1.1\r\nHost: gunicorn.org\r\n\r\n")
-        r = SocketReader(s)
-        p = HttpStream(r)
-        print "Headers"
-        print "-------\n"
-
+        p = HttpStream(SocketReader(s))
         print p.headers()
-        print "WSGI environ"
-        print "------------\n"
-        print p.wsgi_environ()
-        print ""
-        print "Body"
-        print "----\n"
         print p.body_file().read()
     finally:
         s.close()

@@ -300,14 +300,9 @@ cdef class HttpParser:
         """ get request/response headers """
         return self._data.headers
 
-    def get_wsgi_environ(self, initial=None):
+    def get_wsgi_environ(self):
         """ get WSGI environ based on the current request """
-
-        if initial is None:
-            initial = {}
-
         environ = self._data.environ
-        environ.update(initial)
 
         # clean special keys
         for key in ("CONTENT_LENGTH", "CONTENT_TYPE", "SCRIPT_NAME"):

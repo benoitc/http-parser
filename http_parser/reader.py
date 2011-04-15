@@ -134,7 +134,7 @@ class SocketReader(io.RawIOBase):
         self._checkClosed()
         self._checkReadable()
 
-	if _readinto is not None:
+        if _readinto is not None:
             return _readinto(self._sock, b)
 
         while True:

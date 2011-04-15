@@ -39,7 +39,19 @@ objects with the same aî (recv_into needed). You cnan of course use any
 io.RawIOBase object.
 
 Likre http-parser in C you can pass your own callbacks to the C parser,
-so you can eventually parse asynchronously any HTTP stream.
+so you can eventually parse asynchronously any HTTP stream. Callbacks
+are::
+
+    on_message_begin()
+    on_path(path)
+    on_query_string(query_string)
+    on_url(url)
+    on_fragment(fragment)
+    on_header_field(field, last_was_value)
+    on_header_value(key, value)
+    on_headers_complete()
+    on_body(chunk)
+    on_message_complete()
 
 
 Example of HttpStream

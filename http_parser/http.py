@@ -39,13 +39,13 @@ class HttpStream(object):
         if self.parser.is_headers_complete():
             return
 
-        try:
-            while True:
+        while True:
+            try:
                 data = self.next()
+            except StopIteration:
                 if self.parser.is_headers_complete():
-                    break
-        except StopIteration:
-            raise NoMoreData
+                    return
+                raise NoMoreData
 
     def url(self):
         """ get full url of the request """
@@ -133,12 +133,18 @@ class HttpStream(object):
         if self.parser.is_message_complete():
             raise StopIteration 
 
+        # fetch data
         b = bytearray(io.DEFAULT_BUFFER_SIZE)
         recved = self.stream.readinto(b)
         if recved is None:
-            recved = 0
+            raise NoMoreData
+
         del b[recved:]
+       
+        # parse data
         nparsed = self.parser.execute(bytes(b), recved)
         assert nparsed == recved
+        if recved == 0:
+            raise StopIteration
 
         return bytes(b) 

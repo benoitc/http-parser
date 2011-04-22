@@ -38,10 +38,10 @@ http-parser provide you **parser.HttpParser** low-level parser in C that
 you can access in your python program and **http.HttpStream** providing
 higher-level access to a readable,sequential io.RawIOBase object.
 
-To help you in your day work, http-parser prvides you 3 kind of readers
+To help you in your day work, http-parser provides you 3 kind of readers
 in the reader module: IterReader to read iterables, StringReader to
 reads strings and StringIO objects, SocketReader to read sockets or
-objects with the same aî (recv_into needed). You cnan of course use any
+objects with the same api (recv_into needed). You can of course use any
 io.RawIOBase object.
 
 Example of HttpStream
@@ -124,7 +124,7 @@ Example of HttpParser:
         main()
 
 
-You can find more docs in the code (or use a doc genererator).
+You can find more docs in the code (or use a doc generator).
 
 
 Copyright

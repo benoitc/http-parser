@@ -106,6 +106,11 @@ class HttpStream(object):
         self._check_headers_complete() 
         return self.parser.should_keep_alive()
 
+    def is_chunked(self):
+        """ return True if Transfer-Encoding header value is chunked"""
+        self._check_headers_complete() 
+        return self.parser.is_chunked()
+
     def wsgi_environ(self, initial=None):
         """ get WSGI environ based on the current request.
         

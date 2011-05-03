@@ -136,7 +136,7 @@ cdef int on_headers_complete_cb(http_parser *parser):
             del res.headers['content-encoding']
         else:
             res.decompress = False
-
+    
     return 0
 
 cdef int on_message_begin_cb(http_parser *parser):
@@ -178,6 +178,7 @@ class _ParserData(object):
         self.decompress = decompress
         self.decompressobj = None
 
+        self.chunked = False
 
         self.headers_complete = False
         self.partial_body = False
@@ -349,6 +350,11 @@ cdef class HttpParser:
     def is_message_complete(self):
         """ return True if the parsing is done (we get EOF) """
         return self._data.message_complete
+
+    def is_chunked(self):
+        """ return True if Transfer-Encoding header value is chunked"""
+        te = self._data.headers.get('transfer-encoding', '').lower()
+        return te == 'chunked'
 
     def should_keep_alive(self):
         """ return True if the connection should be kept alive

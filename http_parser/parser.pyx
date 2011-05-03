@@ -67,9 +67,6 @@ cdef int on_path_cb(http_parser *parser, char *at,
 
     res.path = value
     res.environ['PATH_INFO'] = unquote(value)
-    
-    if 'on_path' in res.callbacks:
-        res.callbacks['on_path'](value)
     return 0
 
 cdef int on_query_string_cb(http_parser *parser, char *at, 
@@ -78,9 +75,6 @@ cdef int on_query_string_cb(http_parser *parser, char *at,
     value = PyString_FromStringAndSize(at, length)
     res.query_string = value
     res.environ['QUERY_STRING'] = value
-    
-    if 'on_query_string' in res.callbacks:
-        res.callbacks['on_query_string'](value)
     return 0
 
 cdef int on_url_cb(http_parser *parser, char *at,
@@ -89,8 +83,6 @@ cdef int on_url_cb(http_parser *parser, char *at,
     value = PyString_FromStringAndSize(at, length)
     res.url = value
     res.environ['RAW_URI'] = value
-    if 'on_url' in res.callbacks:
-        res.callbacks['on_url'](value)
     return 0
 
 cdef int on_fragment_cb(http_parser *parser, char *at, 
@@ -98,10 +90,6 @@ cdef int on_fragment_cb(http_parser *parser, char *at,
     res = <object>parser.data
     value = PyString_FromStringAndSize(at, length)
     res.fragment = value
-    
-    if 'on_fragment' in res.callbacks:
-        res.callbacks['on_fragment'](value)
-
     return 0
 
 cdef int on_header_field_cb(http_parser *parser, char *at, 
@@ -113,11 +101,6 @@ cdef int on_header_field_cb(http_parser *parser, char *at,
         res._last_field = ""
     res._last_field += header_field
     res._last_was_value = False
-
-    if 'on_header_field' in res.callbacks:
-        res.callbacks['on_header_field'](header_field, res._state_is_value)
-
-
     return 0
 
 cdef int on_header_value_cb(http_parser *parser, char *at, 
@@ -132,28 +115,17 @@ cdef int on_header_value_cb(http_parser *parser, char *at,
     # add to headers
     res.headers[res._last_field] = res.headers.get(res._last_field,
             '') + header_value
-
-    if 'on_header_value' in res.callbacks:
-        res.callbacks['on_header_value'](res._last_field, header_value)
-
     res._last_was_value = True
     return 0
 
 cdef int on_headers_complete_cb(http_parser *parser):
     res = <object>parser.data
     res.headers_complete = True
-
-    if 'on_headers_complete' in res.callbacks:
-        res.callbacks['on_headers_complete']()
-
     return 0
 
 cdef int on_message_begin_cb(http_parser *parser):
     res = <object>parser.data
     res.message_begin = True
-    
-    if 'on_message_begin' in res.callbacks:
-        res.callbacks['on_message_begin']()
     return 0
 
 cdef int on_body_cb(http_parser *parser, char *at, 
@@ -163,25 +135,17 @@ cdef int on_body_cb(http_parser *parser, char *at,
 
     res.partial_body = True
     res.body.append(value)
-
-    if 'on_body' in res.callbacks:
-        res.callbacks['on_body'](value)
-
     return 0
 
 cdef int on_message_complete_cb(http_parser *parser):
     res = <object>parser.data
     res.message_complete = True
-    if 'on_message_complete' in res.callbacks:
-        res.callbacks['on_message_complete']()
-
     return 0
 
 
 class _ParserData(object):
 
-    def __init__(self, callbacks=None):
-        self.callbacks = callbacks or {}
+    def __init__(self):
         self.path = ""
         self.query_string = ""
         self.url = ""
@@ -205,32 +169,15 @@ cdef class HttpParser:
     cdef http_parser_settings _settings
     cdef object _data
 
-    def __init__(self, kind=2, callbacks=None):
+    def __init__(self, kind=2):
         """ constructor of HttpParser object. 
         
         
         :attr kind: Int,  could be 0 to parseonly requests, 
         1 to parse only responses or 2 if we want to let
         the parser detect the type. 
-
-        :attr callbacks: list of callbacks we want to pass to the
-        parser::
-
-            on_message_begin()
-            on_path(path)
-            on_query_string(query_string)
-            on_url(url)
-            on_fragment(fragment)
-            on_header_field(field, last_was_value)
-            on_header_value(key, value)
-            on_headers_complete()
-            on_body(chunk)
-            on_message_complete()
-        
-        Callbacks are useful for those who want to parse an HTTP stream
-        asynchronously.
         """
-
+        
         # set parser type
         if kind == 2:
             parser_type = HTTP_BOTH
@@ -241,7 +188,7 @@ cdef class HttpParser:
 
         # initialize parser
         http_parser_init(&self._parser, parser_type)
-        self._data = _ParserData(callbacks=None)
+        self._data = _ParserData()
         self._parser.data = <void *>self._data
 
         # set callback

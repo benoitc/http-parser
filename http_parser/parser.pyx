@@ -136,6 +136,7 @@ cdef int on_headers_complete_cb(http_parser *parser):
             del res.headers['content-encoding']
         else:
             res.decompress = False
+
     return 0
 
 cdef int on_message_begin_cb(http_parser *parser):

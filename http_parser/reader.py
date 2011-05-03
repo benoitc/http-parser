@@ -46,7 +46,7 @@ class HttpBodyReader(io.RawIOBase):
             if  self.http_stream.parser.is_partial_body():
                 return self.http_stream.parser.recv_body_into(b)
             return 0
-
+        
         self._checkReadable()
         self._checkClosed()
 
@@ -54,11 +54,13 @@ class HttpBodyReader(io.RawIOBase):
             buf = bytearray(io.DEFAULT_BUFFER_SIZE)
             recved = self.http_stream.stream.readinto(buf)
             if recved is None:
-                recved = 0
+                break 
                 
             del buf[recved:]
             nparsed = self.http_stream.parser.execute(bytes(buf), recved)
-            assert nparsed == recved
+            if nparsed != recved:
+                return None
+
             if self.http_stream.parser.is_partial_body() or recved == 0:
                 break
         
@@ -66,6 +68,7 @@ class HttpBodyReader(io.RawIOBase):
             self.eof = True
             del b[0:] 
             return len(b)
+
         return self.http_stream.parser.recv_body_into(b)
 
     def readable(self):

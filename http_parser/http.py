@@ -18,6 +18,9 @@ class NoMoreData(Exception):
     we didn't get all data needed. 
     """
 
+class ParserError(Exception):
+    """ error while parsing http request """
+
 class HttpStream(object):
     """ An HTTP parser providing higher-level access to a readable,
     sequential io.RawIOBase object. You can use implementions of
@@ -46,7 +49,7 @@ class HttpStream(object):
             except StopIteration:
                 if self.parser.is_headers_complete():
                     return
-                raise NoMoreData
+                raise NoMoreData()
 
     def url(self):
         """ get full url of the request """
@@ -148,13 +151,15 @@ class HttpStream(object):
         b = bytearray(io.DEFAULT_BUFFER_SIZE)
         recved = self.stream.readinto(b)
         if recved is None:
-            raise NoMoreData
+            raise NoMoreData("no more data")
 
         del b[recved:]
-       
+
         # parse data
         nparsed = self.parser.execute(bytes(b), recved)
-        assert nparsed == recved
+        if nparsed != recved:
+            raise ParserError("nparsed != recved")
+            
         if recved == 0:
             raise StopIteration
 

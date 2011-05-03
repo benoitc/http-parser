@@ -7,6 +7,8 @@ from libc.stdlib cimport *
 import os
 from urllib import unquote
 
+from http_parser.util import IOrderedDict
+
 cdef extern from "Python.h":
 
     object PyString_FromStringAndSize(char *s, Py_ssize_t len)
@@ -151,7 +153,7 @@ class _ParserData(object):
         self.url = ""
         self.fragment = ""
         self.body = []
-        self.headers = {}
+        self.headers = IOrderedDict()
         self.environ = {}
 
         self.headers_complete = False

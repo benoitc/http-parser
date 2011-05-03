@@ -127,7 +127,7 @@ cdef int on_headers_complete_cb(http_parser *parser):
     res.headers_complete = True
 
     if res.decompress:
-        encoding = res.headers.get('transfer-encoding')
+        encoding = res.headers.get('content-encoding')
         if encoding == 'gzip':
             res.decompressobj = zlib.decompressobj(16+zlib.MAX_WBITS)
         elif encoding == 'deflate':

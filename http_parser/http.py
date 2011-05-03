@@ -7,6 +7,7 @@ import io
 
 from .parser import HttpParser
 from .reader import HttpBodyReader
+from .util import status_reasons
 
 HTTP_BOTH = 2
 HTTP_RESPONSE = 1
@@ -77,13 +78,22 @@ class HttpStream(object):
         self._check_headers_complete()
         return self.parser.get_status_code()
 
+    def status(self):
+        """ return complete status with reason """
+        status_code = self.status_code()
+        reason = status_reasons.get(int(status_code), 'unknown')
+        return "%s %s" % (status_code, reason)
+
+
     def method(self):
         """ get HTTP method as string"""
         self._check_headers_complete()
         return self.parser.get_method()
         
     def headers(self):
-        """ get request/response headers """
+        """ get request/response headers, headers are returned in a
+        OrderedDict that allows you to get value using insensitive
+        keys."""
         self._check_headers_complete() 
         return self.parser.get_headers()
 

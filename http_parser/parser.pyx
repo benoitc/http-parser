@@ -266,7 +266,8 @@ cdef class HttpParser:
         return self._data.fragment
 
     def get_headers(self):
-        """ get request/response headers """
+        """ get request/response headers, headers are returned in a
+        OrderedDict that allows you to get value using insensitive keys. """
         return self._data.headers
 
     def get_wsgi_environ(self):

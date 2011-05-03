@@ -3,5 +3,5 @@
 # This file is part of http_parser released under the MIT license. 
 # See the NOTICE for more information.
 
-version_info = (0, 2, 1)
+version_info = (0, 3, 0)
 __version__ = ".".join(map(str, version_info))

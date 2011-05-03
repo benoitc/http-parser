@@ -25,7 +25,7 @@ class HttpStream(object):
     create your own.
     """
 
-    def __init__(self, stream, kind=HTTP_BOTH):
+    def __init__(self, stream, kind=HTTP_BOTH, decompress=False):
         """ constructor of HttpStream. 
 
         :attr stream: an io.RawIOBase object
@@ -33,7 +33,7 @@ class HttpStream(object):
         1 to parse only responses or 2 if we want to let
         the parser detect the type.
         """
-        self.parser = HttpParser(kind=kind)
+        self.parser = HttpParser(kind=kind, decompress=decompress)
         self.stream = stream
 
     def _check_headers_complete(self):

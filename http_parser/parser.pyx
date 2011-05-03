@@ -6,6 +6,8 @@
 from libc.stdlib cimport *
 import os
 from urllib import unquote
+import zlib
+
 
 from http_parser.util import IOrderedDict
 
@@ -123,6 +125,15 @@ cdef int on_header_value_cb(http_parser *parser, char *at,
 cdef int on_headers_complete_cb(http_parser *parser):
     res = <object>parser.data
     res.headers_complete = True
+
+    if res.decompress:
+        encoding = res.headers.get('transfer-encoding')
+        if encoding == 'gzip':
+            res.decompressobj = zlib.decompressobj(16+zlib.MAX_WBITS)
+        elif encoding == 'deflate':
+            res.decompressobj = zlib.decompressobj()
+        else:
+            res.decompress = False
     return 0
 
 cdef int on_message_begin_cb(http_parser *parser):
@@ -136,6 +147,11 @@ cdef int on_body_cb(http_parser *parser, char *at,
     value = PyString_FromStringAndSize(at, length)
 
     res.partial_body = True
+
+    # decompress the value if needed
+    if res.decompress:
+        value = res.decompressobj.decompress(value)
+
     res.body.append(value)
     return 0
 
@@ -147,7 +163,7 @@ cdef int on_message_complete_cb(http_parser *parser):
 
 class _ParserData(object):
 
-    def __init__(self):
+    def __init__(self, decompress=False):
         self.path = ""
         self.query_string = ""
         self.url = ""
@@ -155,6 +171,10 @@ class _ParserData(object):
         self.body = []
         self.headers = IOrderedDict()
         self.environ = {}
+        
+        self.decompress = decompress
+        self.decompressobj = None
+
 
         self.headers_complete = False
         self.partial_body = False
@@ -171,7 +191,7 @@ cdef class HttpParser:
     cdef http_parser_settings _settings
     cdef object _data
 
-    def __init__(self, kind=2):
+    def __init__(self, kind=2, decompress=False):
         """ constructor of HttpParser object. 
         
         
@@ -190,7 +210,7 @@ cdef class HttpParser:
 
         # initialize parser
         http_parser_init(&self._parser, parser_type)
-        self._data = _ParserData()
+        self._data = _ParserData(decompress=decompress)
         self._parser.data = <void *>self._data
 
         # set callback

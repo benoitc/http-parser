@@ -121,9 +121,10 @@ class HttpStream(object):
         text = io.TextIOWrapper(buffer, encoding, errors, newline)
         return text
 
-    def body_string(self, encoding=None, errors=None, newline=None):
+    def body_string(self, binary=True, encoding=None, errors=None, 
+            newline=None):
         """ return body as string """
-        return self.body_file(binary=False, encoding=encoding,
+        return self.body_file(binary=binary, encoding=encoding,
                 newline=newline).read()
    
     def __iter__(self):

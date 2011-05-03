@@ -113,6 +113,11 @@ class IOrderedDict(dict, MutableMapping):
             pass
         dict.clear(self)
 
+    def get(self, key, default=None):
+        if key in self:
+            return self[key]
+        return default
+
     setdefault = MutableMapping.setdefault
     update = MutableMapping.update
     pop = MutableMapping.pop

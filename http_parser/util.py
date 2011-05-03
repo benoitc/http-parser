@@ -47,7 +47,7 @@ class IOrderedDict(dict, MutableMapping):
             root = self.__root
             last = root[PREV]
             last[NEXT] = root[PREV] = self.__map[key] = [last, root, key]
-            self.__lower[key.lower()] = value
+            self.__lower[key.lower()] = key
         key = self.__lower[key.lower()]
         dict_setitem(self, key, value)
 

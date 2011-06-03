@@ -7,7 +7,7 @@
 import sys
 
 if sys.version_info < (2, 6, 0, 'final'):
-    from py25 import IorderedDict
+    from py25 import IOrderedDict
 else:
     from collections import MutableMapping
     from itertools import imap

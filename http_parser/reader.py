@@ -24,7 +24,7 @@ if sys.version_info < (2, 7, 0, 'final'):
                 recved = sock.recv_into(buf)
                 b[0:recved] = buf.tostring()
                 return recved
-            except socket.error as e:
+            except socket.error, e:
                 n = e.args[0]
                 if n == EINTR:
                     continue
@@ -146,7 +146,7 @@ class SocketReader(io.RawIOBase):
         while True:
             try:
                 return self._sock.recv_into(b)
-            except socket.error as e:
+            except socket.error, e:
                 n = e.args[0]
                 if n == EINTR:
                     continue

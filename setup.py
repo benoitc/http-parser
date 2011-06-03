@@ -15,11 +15,10 @@ import sys
 import traceback
 
 if not hasattr(sys, 'version_info') or \
-        sys.version_info < (2, 6, 0, 'final'):
+        sys.version_info < (2, 5, 0, 'final'):
     raise SystemExit("http-parser requires Python 2.6x or later")
 
 is_pypy = hasattr(sys, 'pypy_version_info')
-
 
 CLASSIFIERS = [
         'Development Status :: 4 - Beta',

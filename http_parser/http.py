@@ -6,12 +6,12 @@
 import io
 
 try:
-    from .parser import HttpParser
+    from http_parser.parser import HttpParser
 except ImportError:
-    from .pyparser import HttpParser
+    from http_parser.pyparser import HttpParser
 
-from .reader import HttpBodyReader
-from .util import status_reasons
+from http_parser.reader import HttpBodyReader
+from http_parser.util import status_reasons
 
 HTTP_BOTH = 2
 HTTP_RESPONSE = 1

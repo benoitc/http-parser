@@ -13,13 +13,25 @@ if sys.version_info[0] == 3:
    
     def bytes_to_str(b):
         return str(b, 'latin1')
+
+    import io
+    StringIO = io.StringIO
+    
 else:
     from urllib import unquote
     def b(s):
         return s
 
     def bytes_to_str(s):
-        return s 
+        return s
+
+    try:
+        import cStringIO
+        StringIO = BytesIO = cStringIO.StringIO
+    except ImportError:
+        import StringIO
+        StringIO = BytesIO = StringIO.StringIO
+    
 
 if sys.version_info < (2, 6, 0, 'final'):
     from py25 import IOrderedDict

@@ -3,7 +3,9 @@
 # This file is part of http-parser released under the MIT license. 
 # See the NOTICE for more information.
 
+import os
 import re
+import urlparse
 import zlib
 try:
     from cStringIO import StringIO
@@ -28,6 +30,9 @@ class InvalidRequestLine(Exception):
 
 class InvalidHeader(Exception):
     """ error raised on invalid header """
+
+class InvalidChunkSize(Exception):
+    """ error raised when we parse an invalid chunk size """
 
 class HttpParser(object):
 
@@ -56,12 +61,14 @@ class HttpParser(object):
         self._body = []
         self._trailers = None
         self._partial_body = False
+        self._clen = None
+        self._clen_rest = None
 
         # private events
         self.__on_firstline = False
         self.__on_headers_complete = False
         self.__on_message_begin = False
-        self.__on_message_end = False
+        self.__on_message_complete = False
 
         self.__decompress_obj = None
 
@@ -177,8 +184,8 @@ class HttpParser(object):
         return self.version == (1, 1)
         
     def execute(self, data, length):
-        
         # end of body can be passed manually by putting a length of 0
+
         if length == 0:
             self.on_message_complete = True
             return length
@@ -186,7 +193,7 @@ class HttpParser(object):
         # start to parse
         nb_parsed = 0
         while True:
-            if not self._on_firstline:
+            if not self.__on_firstline:
                 idx = data.find("\r\n")
                 if idx < 0:
                     self._buf.write(data)
@@ -204,6 +211,7 @@ class HttpParser(object):
                         return nb_parsed
             elif not self.__on_headers_complete:
                 self._buf.write(data)
+                data = ""
 
                 try:
                     ret = self._parse_headers(self._buf.getvalue())
@@ -220,12 +228,20 @@ class HttpParser(object):
                     self.__on_message_begin = True
 
                 self._buf.write(data)
+                data = ""
+
                 ret = self._parse_body()
-                if ret < 0:
+                if ret is None:
+                    return length
+
+                elif ret < 0:
                     return ret
-                if ret == 0:
+                elif ret == 0:
                     self.__on_message_complete = True
                     return length
+                else:
+                    nb_parsed = max(length, ret)
+
             else:
                 return 0
 
@@ -331,13 +347,21 @@ class HttpParser(object):
             self._headers[name] = value
 
             # update WSGI environ
-            key =  'HTTP_%s' % res._last_field.upper().replace('-','_')
+            key =  'HTTP_%s' % name.upper().replace('-','_')
             self._environ[key] = value
 
         
         # detect now if body is sent by chunks.
+        clen = self._headers.get('content-length')
         te = self._headers.get('transfer-encoding', '').lower()
-        self._chunked = (te == 'chunked')
+
+        if clen is not None:
+            try:
+                self._clen_rest = self._clen = int(clen)
+            except ValieError:
+                pass
+        else:
+            self._chunked = (te == 'chunked')
 
         # detect encoding and set decompress object 
         encoding = self._headers.get('content-encoding')
@@ -355,7 +379,8 @@ class HttpParser(object):
     def _parse_body(self):
         if not self._chunked:
             body_part = self._buf.getvalue()
-        
+            self._clen_rest -= len(body_part)
+
             # maybe decompress
             if self.__decompress_obj is not None:
                 body_part = self.__decompress_obj.decompress(body_part)
@@ -363,8 +388,12 @@ class HttpParser(object):
             self._partial_body = True
             self._body.append(body_part)
             self._buf = StringIO()
-            return 0
+
+            if self._clen_rest <= 0:
+                self.__on_message_complete = True
+            return  
         else:
+
             data = self._buf.getvalue()
             try:
 
@@ -372,14 +401,15 @@ class HttpParser(object):
             except InvalidChunkSize, e:
                 self.errno = INVALID_CHUNK
                 self.errstr = "invalid chunk size [%s]" % str(e)
-
                 return -1
 
             if size == 0:
                 return size
 
             if size is None or len(rest) < size:
-                return length
+                return None
+            
+
             body_part, rest = rest[:size], rest[size:]
             if len(rest) < 2:
                 self.errno = INVALID_CHUNK
@@ -409,7 +439,7 @@ class HttpParser(object):
             raise InvalidChunkSize(chunk_size)
 
         if chunk_size == 0:
-            self.parse_trailers(rest_chunk)
+            self._parse_trailers(rest_chunk)
             return 0, None
         return chunk_size, rest_chunk
 

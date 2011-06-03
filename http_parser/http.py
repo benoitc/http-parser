@@ -5,7 +5,11 @@
 
 import io
 
-from .parser import HttpParser
+try:
+    from .parser import HttpParser
+except ImportError:
+    from .pyparser import HttpParser
+
 from .reader import HttpBodyReader
 from .util import status_reasons
 

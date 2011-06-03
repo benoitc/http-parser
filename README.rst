@@ -10,7 +10,7 @@ Project url: https://github.com/benoitc/http-parser/
 Requirements:
 -------------
 
-- Python 2.6 or sup.
+- Python 2.5 or sup. Pypy latest version.
 - Cython if you need to rebuild the C code
 
 Installation
@@ -24,6 +24,12 @@ Or install from source::
 
     $ git clone git://github.com/benoitc/http-parser.git
     $ cd http-parser && python setup.py install
+
+
+Note: if you get an error on MacOSX try to install with the following
+arguments:
+
+    $ env ARCHFLAGS="-arch i386 -arch x86_64" python setup.py install
 
 Usage
 -----
@@ -40,6 +46,9 @@ io.RawIOBase object.
 
 Example of HttpStream
 +++++++++++++++++++++
+
+Note: HttpStream object works only with python 2.6 and sup (and pypy),
+Only HttpParser object is available for Python 2.5.
 
 ex::
     
@@ -72,7 +81,11 @@ Example of HttpParser:
     #!/usr/bin/env python
     import socket
 
-    from http_parser.parser import HttpParser
+    # try to import C parser then fallback in pure python parser.
+    try:
+        from http_parser.parser import HttpParser
+    except ImportError:
+        from http_parser.pyparser import HttpParser
 
 
     def main():

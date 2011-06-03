@@ -68,7 +68,19 @@ class IOrderedDict(dict, DictMixin):
     def __getitem__(self, key, dict_getitem=dict.__getitem__):
         if key in self:
             key = self.__lower.get(key.lower())
+
         return dict_getitem(self, key)
+
+
+    def get(self, key, default=None):
+        if key in self:
+            key = self.__lower.get(key.lower())
+        return dict.get(self, key, default)
+
+    def pop(self, key, default=None):
+        if key in self:
+            key = self.__lower.get(key.lower())
+        return dict.pop(self, key, default)
 
     def __contains__(self, key):
         return key.lower() in self.__lower

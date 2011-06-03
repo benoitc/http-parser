@@ -201,7 +201,6 @@ class HttpParser(object):
                     nb_parsed = nb_parsed + idx + 2
                     rest = data[idx+2:]
                     data = b("")
-                    print type(first_line)
                     if self._parse_firstline(first_line):
                         self._buf = [rest]
                     else:
@@ -330,7 +329,7 @@ class HttpParser(object):
             if curr.find(":") < 0:
                 raise InvalidHeader("invalid line %s" % curr.strip())
             name, value = curr.split(":", 1)
-            name = name.rstrip(" \t").upper()
+            name = name.rstrip(" \t")
             if HEADER_RE.search(name):
                 raise InvalidHeader("invalid header name %s" % name)
             name, value = name.strip(), [value.lstrip()]
@@ -354,12 +353,16 @@ class HttpParser(object):
         
         # detect now if body is sent by chunks.
         clen = self._headers.get('content-length')
+        print "clen == %s" % clen
         te = self._headers.get('transfer-encoding', '').lower()
 
+        print self._headers
         if clen is not None:
+            print(clen)
             try:
-                self._clen_rest = self._clen = int(clen)
-            except ValieError:
+                self._clen = int(clen)
+                self._clen_rest = self._clen
+            except ValueError:
                 pass
         else:
             self._chunked = (te == 'chunked')
@@ -379,6 +382,8 @@ class HttpParser(object):
     def _parse_body(self):
         if not self._chunked:
             body_part = b("").join(self._buf)
+
+            print str(self._clen_rest)
             self._clen_rest -= len(body_part)
 
             # maybe decompress

@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 import socket
-"""
+
 try:
     from http_parser.parser import HttpParser
 except ImportError:
     from http_parser.pyparser import HttpParser
-"""
-from http_parser.pyparser import HttpParser
+
 from http_parser.util import b
 def main():
 

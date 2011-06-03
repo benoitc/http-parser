@@ -7,13 +7,8 @@ import os
 import re
 import urlparse
 import zlib
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
 
-
-from http_parser.util import IOrderedDict
+from http_parser.util import b, bytes_to_str, IOrderedDict, StringIO, unquote
 
 
 METHOD_RE = re.compile("[A-Z0-9$-_.]{3,20}")
@@ -46,7 +41,7 @@ class HttpParser(object):
         self.errstr = ""
         
         # protected variables
-        self._buf = StringIO()
+        self._buf = [] 
         self._version = None
         self._method = None
         self._status_code = None
@@ -113,7 +108,7 @@ class HttpParser(object):
         if script_name:
             path_info = self._path.split(script_name, 1)[1]
             environ.update({
-                "PATH_INFO": path_info,
+                "PATH_INFO": unquote(path_info),
                 "SCRIPT_NAME": script_name})
         else:
             environ['SCRIPT_NAME'] = ""
@@ -129,19 +124,19 @@ class HttpParser(object):
 
     def recv_body(self):
         """ return last chunk of the parsed body"""
-        body = "".join(self._body)
+        body = b("").join(self._body)
         self._body = []
         self._partial_body = False
         return body
 
-    def recv_body_into(self, b):
+    def recv_body_into(self, barray):
         """ Receive the last chunk of the parsed bodyand store the data
         in a buffer rather than creating a new string. """
-        l = len(b)
-        body = "".join(self._body)
+        l = len(barray)
+        body = b("").join(self._body)
         m = min(len(body), l)
         data, rest = body[:m], body[m:]
-        b[0:m] = data
+        barray[0:m] = data
         if not rest:
             self._body = []
             self._partial_body = False
@@ -195,27 +190,29 @@ class HttpParser(object):
         nb_parsed = 0
         while True:
             if not self.__on_firstline:
-                idx = data.find("\r\n")
+                idx = data.find(b("\r\n"))
                 if idx < 0:
-                    self._buf.write(data)
+                    self._buf.append(data)
                     return len(data)
                 else:
                     self.__on_firstline = True
-                    first_line = "%s%s" % (self._buf.getvalue(), data[:idx])
+                    self._buf.append(data[:idx])
+                    first_line = bytes_to_str(b("").join(self._buf))
                     nb_parsed = nb_parsed + idx + 2
                     rest = data[idx+2:]
-                    data = ""
+                    data = b("")
+                    print type(first_line)
                     if self._parse_firstline(first_line):
-                        self._buf = StringIO()
-                        self._buf.write(rest)
+                        self._buf = [rest]
                     else:
                         return nb_parsed
             elif not self.__on_headers_complete:
-                self._buf.write(data)
-                data = ""
+                if data:
+                    self._buf.append(data)
+                    data = b("")
 
                 try:
-                    ret = self._parse_headers(self._buf.getvalue())
+                    ret = self._parse_headers(b("").join(self._buf))
                     if not ret:
                         self.__on_headers_complete = True
                         return length
@@ -228,8 +225,9 @@ class HttpParser(object):
                 if not self.__on_message_begin:
                     self.__on_message_begin = True
 
-                self._buf.write(data)
-                data = ""
+                if data:
+                    self._buf.append(data)
+                    data = b("")
 
                 ret = self._parse_body()
                 if ret is None:
@@ -315,12 +313,14 @@ class HttpParser(object):
             "SERVER_PROTOCOL": bits[2]})
     
     def _parse_headers(self, data):
-        idx = data.find("\r\n\r\n")
+        idx = data.find(b("\r\n\r\n"))
         if idx < 0: # we don't have all headers
             return False
 
+        
         # Split lines on \r\n keeping the \r\n on each line
-        lines = [line + "\r\n" for line in data[:idx].split("\r\n")]
+        lines = [bytes_to_str(line) + "\r\n" for line in
+                data[:idx].split(b("\r\n"))]
         
         # Parse headers into key/value pairs paying attention
         # to continuation lines.
@@ -372,14 +372,13 @@ class HttpParser(object):
             self.__decompress_obj = zlib.decompressobj()
     
         rest = data[idx+4:]
-        self._buf = StringIO()
-        self._buf.write(rest)
+        self._buf = [rest]
         self.__on_headers_complete = True
         return len(rest)
 
     def _parse_body(self):
         if not self._chunked:
-            body_part = self._buf.getvalue()
+            body_part = b("").join(self._buf)
             self._clen_rest -= len(body_part)
 
             # maybe decompress
@@ -388,14 +387,13 @@ class HttpParser(object):
 
             self._partial_body = True
             self._body.append(body_part)
-            self._buf = StringIO()
+            self._buf = []
 
             if self._clen_rest <= 0:
                 self.__on_message_complete = True
             return  
         else:
-
-            data = self._buf.getvalue()
+            data = b("").join(self._buf)
             try:
 
                 size, rest = self._parse_chunk_size(data)
@@ -424,16 +422,15 @@ class HttpParser(object):
             self._partial_body = True
             self._body.append(body_part)
 
-            self._buf = StringIO()
-            self._buf.write(rest[2:])
+            self._buf = [rest[2:]]
             return len(rest)
 
     def _parse_chunk_size(self, data):
-        idx = data.find("\r\n")
+        idx = data.find(b("\r\n"))
         if idx < 0:
             return None, None
         line, rest_chunk = data[:idx], data[idx+2:]
-        chunk_size = line.split(";", 1)[0].strip()
+        chunk_size = line.split(b(";"), 1)[0].strip()
         try:
             chunk_size = int(chunk_size, 16)
         except ValueError:
@@ -445,7 +442,7 @@ class HttpParser(object):
         return chunk_size, rest_chunk
 
     def _parse_trailers(self, data):
-        idx = data.find("\r\n\r\n")
+        idx = data.find(b("\r\n\r\n"))
 
-        if data[:2] == "\r\n":
+        if data[:2] == b("\r\n"):
             self._trailers = self._parse_headers(data[:idx])

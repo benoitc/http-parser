@@ -5,6 +5,7 @@ try:
     from http_parser.parser import HttpParser
 except ImportError:
     from http_parser.pyparser import HttpParser
+from http_parser.util import b
 
 def main():
 
@@ -14,7 +15,7 @@ def main():
     header_done = False
     try:
         s.connect(('gunicorn.org', 80))
-        s.send("GET / HTTP/1.1\r\nHost: gunicorn.org\r\n\r\n")
+        s.send(b("GET / HTTP/1.1\r\nHost: gunicorn.org\r\n\r\n"))
         
         while True:
             data = s.recv(1024)
@@ -26,8 +27,8 @@ def main():
             assert nparsed == recved
 
             if p.is_headers_complete() and not header_done:
-                print p.get_headers()
-                print p.get_headers()['content-length']
+                print(p.get_headers())
+                print(p.get_headers()['content-length'])
                 header_done = True
 
             if p.is_partial_body():
@@ -36,7 +37,7 @@ def main():
             if p.is_message_complete():
                 break
 
-        print "".join(body)
+        print(b("").join(body))
     
     finally:
         s.close()

@@ -5,15 +5,14 @@
 
 from libc.stdlib cimport *
 import os
-from urllib import unquote
 import zlib
 
+from http_parser.util import b, bytes_to_str, IOrderedDict, unquote
 
-from http_parser.util import IOrderedDict
+cdef extern from "pyversion_compat.h":
+    pass
 
-cdef extern from "Python.h":
-
-    object PyString_FromStringAndSize(char *s, Py_ssize_t len)
+from cpython cimport PyBytes_FromStringAndSize
 
 cdef extern from "http_parser.h" nogil:
     
@@ -67,7 +66,7 @@ cdef extern from "http_parser.h" nogil:
 cdef int on_path_cb(http_parser *parser, char *at,
         size_t length):
     res = <object>parser.data
-    value = PyString_FromStringAndSize(at, length)
+    value = bytes_to_str(PyBytes_FromStringAndSize(at, length))
 
     res.path = value
     res.environ['PATH_INFO'] = unquote(value)
@@ -76,7 +75,7 @@ cdef int on_path_cb(http_parser *parser, char *at,
 cdef int on_query_string_cb(http_parser *parser, char *at, 
         size_t length):
     res = <object>parser.data
-    value = PyString_FromStringAndSize(at, length)
+    value = bytes_to_str(PyBytes_FromStringAndSize(at, length))
     res.query_string = value
     res.environ['QUERY_STRING'] = value
     return 0
@@ -84,7 +83,7 @@ cdef int on_query_string_cb(http_parser *parser, char *at,
 cdef int on_url_cb(http_parser *parser, char *at,
         size_t length):
     res = <object>parser.data
-    value = PyString_FromStringAndSize(at, length)
+    value = bytes_to_str(PyBytes_FromStringAndSize(at, length))
     res.url = value
     res.environ['RAW_URI'] = value
     return 0
@@ -92,25 +91,25 @@ cdef int on_url_cb(http_parser *parser, char *at,
 cdef int on_fragment_cb(http_parser *parser, char *at, 
         size_t length):
     res = <object>parser.data
-    value = PyString_FromStringAndSize(at, length)
-    res.fragment = value
+    value = PyBytes_FromStringAndSize(at, length)
+    res.fragment = bytes_to_str(value)
     return 0
 
 cdef int on_header_field_cb(http_parser *parser, char *at, 
         size_t length):
-    header_field = PyString_FromStringAndSize(at, length)
+    header_field = PyBytes_FromStringAndSize(at, length)
     res = <object>parser.data
-   
+  
     if res._last_was_value:
         res._last_field = ""
-    res._last_field += header_field
+    res._last_field += bytes_to_str(header_field)
     res._last_was_value = False
     return 0
 
 cdef int on_header_value_cb(http_parser *parser, char *at, 
         size_t length):
     res = <object>parser.data
-    header_value = PyString_FromStringAndSize(at, length)
+    header_value = bytes_to_str(PyBytes_FromStringAndSize(at, length))
     
     # update wsgi environ
     key =  'HTTP_%s' % res._last_field.upper().replace('-','_')
@@ -147,7 +146,7 @@ cdef int on_message_begin_cb(http_parser *parser):
 cdef int on_body_cb(http_parser *parser, char *at, 
         size_t length):
     res = <object>parser.data
-    value = PyString_FromStringAndSize(at, length)
+    value = PyBytes_FromStringAndSize(at, length)
 
     res.partial_body = True
 
@@ -310,19 +309,19 @@ cdef class HttpParser:
 
     def recv_body(self):
         """ return last chunk of the parsed body"""
-        body = "".join(self._data.body)
+        body = b("").join(self._data.body)
         self._data.body = []
         self._data.partial_body = False
         return body
 
-    def recv_body_into(self, b):
+    def recv_body_into(self, barray):
         """ Receive the last chunk of the parsed bodyand store the data
         in a buffer rather than creating a new string. """
-        l = len(b)
-        body = "".join(self._data.body)
+        l = len(barray)
+        body = b("").join(self._data.body)
         m = min(len(body), l)
         data, rest = body[:m], body[m:]
-        b[0:m] = data
+        barray[0:m] = data
         if not rest:
             self._data.body = []
             self._data.partial_body = False

@@ -52,7 +52,7 @@ class my_build_ext(build_ext.build_ext):
         sources = glob.glob('http_parser/*.pyx')
         if not sources:
             if not os.path.exists('http_parser/parser.c'):
-                print >> sys.stderr, 'Could not find http_parser/parser.c'
+                sys.stderr.write('Could not find http_parser/parser.c\n')
 
         if os.path.exists('http_parser/parser.c'):
             core_c_mtime = os.stat('http_parser/parser.c').st_mtime
@@ -60,14 +60,15 @@ class my_build_ext(build_ext.build_ext):
                     (os.stat(filename).st_mtime - core_c_mtime) > 1]
             if not changed:
                 return
-            print >> sys.stderr, 'Running %s (changed: %s)' % (self.cython, ', '.join(changed))
+            sys.stderr.write('Running %s (changed: %s)\n' % (self.cython, 
+                ', '.join(changed)))
         else:
-            print >> sys.stderr, 'Running %s' % self.cython
+            sys.stderr.write('Running %s' % self.cython)
         cython_result = os.system('%s http_parser/parser.pyx' % self.cython)
         if cython_result:
             if os.system('%s -V 2> %s' % (self.cython, os.devnull)):
                 # there's no cython in the system
-                print >> sys.stderr, 'No cython found, cannot rebuild parser.c'
+                sys.stderr.write('No cython found, cannot rebuild parser.c\n')
                 return
             sys.exit(1)
 
@@ -95,10 +96,12 @@ class my_build_ext(build_ext.build_ext):
                     except OSError:
                         pass
                     if hasattr(os, 'symlink'):
-                        print 'Linking %s to %s' % (path_to_build_core_so, path_to_core_so)
+                        print('Linking %s to %s' % (path_to_build_core_so, 
+                            path_to_core_so))
                         os.symlink(path_to_build_core_so, path_to_core_so)
                     else:
-                        print 'Copying %s to %s' % (path_to_build_core_so, path_to_core_so)
+                        print('Copying %s to %s' % (path_to_build_core_so, 
+                            path_to_core_so))
                         import shutil
                         shutil.copyfile(path_to_build_core_so, path_to_core_so)
         except Exception:
@@ -150,6 +153,18 @@ def main():
             cmdclass = {'build_ext': my_build_ext},
             ext_modules = EXT_MODULES))
 
+    # Python 3: run 2to3
+    try:
+        from distutils.command.build_py import build_py_2to3
+        from distutils.command.build_scripts import build_scripts_2to3
+    except ImportError:
+        pass
+    else:
+        options['cmdclass'].update({
+            'build_py': build_py_2to3,
+            'build_scripts': build_scripts_2to3,
+        })
+    
 
     setup(**options)
 

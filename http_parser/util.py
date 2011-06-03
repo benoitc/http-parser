@@ -6,6 +6,33 @@
 
 import sys
 
+if sys.version_info[0] == 3:
+    from urllib.parse import unquote
+    def b(s):
+        return s.encode("latin-1")
+   
+    def bytes_to_str(b):
+        return str(b, 'latin1')
+
+    import io
+    StringIO = io.StringIO
+    
+else:
+    from urllib import unquote
+    def b(s):
+        return s
+
+    def bytes_to_str(s):
+        return s
+
+    try:
+        import cStringIO
+        StringIO = BytesIO = cStringIO.StringIO
+    except ImportError:
+        import StringIO
+        StringIO = BytesIO = StringIO.StringIO
+    
+
 if sys.version_info < (2, 6, 0, 'final'):
     from py25 import IOrderedDict
 else:
@@ -128,9 +155,6 @@ else:
         keys = MutableMapping.keys
         values = MutableMapping.values
         items = MutableMapping.items
-        iterkeys = MutableMapping.iterkeys
-        itervalues = MutableMapping.itervalues
-        iteritems = MutableMapping.iteritems
         __ne__ = MutableMapping.__ne__
 
         def popitem(self, last=True):

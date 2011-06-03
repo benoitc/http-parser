@@ -18,6 +18,9 @@ if not hasattr(sys, 'version_info') or \
         sys.version_info < (2, 6, 0, 'final'):
     raise SystemExit("http-parser requires Python 2.6x or later")
 
+is_pypy = hasattr(sys, 'pypy_version_info')
+
+
 CLASSIFIERS = [
         'Development Status :: 4 - Beta',
         'Environment :: Other Environment',
@@ -122,9 +125,6 @@ def main():
         ]
     
     
-    EXT_MODULES = [Extension("http_parser.parser", 
-            sources=SOURCES, include_dirs=INCLUDE_DIRS)]
-
     options = dict(
             name = 'http-parser',
             version = http_parser.__version__,
@@ -138,9 +138,19 @@ def main():
             packages = PACKAGES.keys(),
             package_dir = PACKAGES,
             data_files = DATA_FILES,
-            cmdclass = {'build_ext': my_build_ext},
-            ext_modules = EXT_MODULES
+            
     )
+
+
+    if not is_pypy:
+        EXT_MODULES = [Extension("http_parser.parser", 
+            sources=SOURCES, include_dirs=INCLUDE_DIRS)]
+
+
+        options.update(dict(
+            cmdclass = {'build_ext': my_build_ext},
+            ext_modules = EXT_MODULES))
+
 
     setup(**options)
 

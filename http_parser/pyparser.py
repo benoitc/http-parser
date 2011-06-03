@@ -128,7 +128,7 @@ class HttpParser(object):
 
     def recv_body(self):
         """ return last chunk of the parsed body"""
-        body = "".join(self._data.body)
+        body = "".join(self._body)
         self._body = []
         self._partial_body = False
         return body

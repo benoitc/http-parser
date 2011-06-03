@@ -134,7 +134,10 @@ class SocketReader(io.RawIOBase):
         self._sock = sock
         
     def readinto(self, b):
-        self._checkClosed()
+        try:
+            self._checkClosed()
+        except AttributeError:
+            pass
         self._checkReadable()
 
         if _readinto is not None:

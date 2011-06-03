@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 import socket
 
-from http_parser.parser import HttpParser
-
+try:
+    from http_parser.parser import HttpParser
+except ImportError:
+    from http_parser.pyparser import HttpParser
 
 def main():
 

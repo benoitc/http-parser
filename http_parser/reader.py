@@ -18,7 +18,6 @@ try:
 except ImportError:
     from http_parser.py25 import DEFAULT_BUFFER_SIZE, RawIOBase
 
-
 try:
     bytes
     bytearray

@@ -4,9 +4,6 @@ import socket
 from http_parser.http import HttpStream
 from http_parser.reader import SocketReader
 
-
-from http_parser.parser import HttpParser
-
 from http_parser.util import b
 
 def main():

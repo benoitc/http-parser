@@ -3,7 +3,18 @@
 # This file is part of http-parser released under the MIT license. 
 # See the NOTICE for more information.
 
-import io
+try:
+    from io import DEFAULT_BUFFER_SIZE, BufferedReader, TextIOWrapper
+except ImportError:
+    from py25 import DEFAULT_BUFFER_SIZE, BufferedReader, TextIOWrapper
+
+
+try:
+    bytes
+    bytearray
+except (NameError, AttributeError):
+    # python < 2.6
+    from py25 import bytes, bytearray
 
 try:
     from http_parser.parser import HttpParser
@@ -54,6 +65,9 @@ class HttpStream(object):
                 if self.parser.is_headers_complete():
                     return
                 raise NoMoreData()
+
+            if self.parser.is_headers_complete():
+                return
 
     def url(self):
         """ get full url of the request """
@@ -134,13 +148,13 @@ class HttpStream(object):
         if buffering is None:
             buffering = -1
         if buffering < 0:
-            buffering = io.DEFAULT_BUFFER_SIZE
+            buffering = DEFAULT_BUFFER_SIZE
 
         raw = HttpBodyReader(self)
-        buffer = io.BufferedReader(raw, buffering)
+        buffer = BufferedReader(raw, buffering)
         if binary:
             return buffer
-        text = io.TextIOWrapper(buffer, encoding, errors, newline)
+        text = TextIOWrapper(buffer, encoding, errors, newline)
         return text
 
     def body_string(self, binary=True, encoding=None, errors=None, 
@@ -157,7 +171,7 @@ class HttpStream(object):
             raise StopIteration 
 
         # fetch data
-        b = bytearray(io.DEFAULT_BUFFER_SIZE)
+        b = bytearray(DEFAULT_BUFFER_SIZE)
         recved = self.stream.readinto(b)
         if recved is None:
             raise NoMoreData("no more data")

@@ -5,7 +5,6 @@
 # See the NOTICE for more information.
 
 from errno import EINTR, EAGAIN, EWOULDBLOCK 
-import io
 import socket
 import sys
 import types
@@ -14,11 +13,28 @@ try:
 except ImportError:
     from StringIO import StringIO
 
+try:
+    from io import DEFAULT_BUFFER_SIZE, RawIOBase
+except ImportError:
+    from http_parser.py25 import DEFAULT_BUFFER_SIZE, RawIOBase
+
+
+try:
+    bytes
+    bytearray
+except (NameError, AttributeError):
+    # python < 2.6
+    from py25 import bytes, bytearray
+
+
+_blocking_errnos = ( EAGAIN, EWOULDBLOCK )
+
 if sys.version_info < (2, 7, 0, 'final'):
     # in python 2.6 socket.recv_into doesn't support bytesarray
     import array
     def _readinto(sock, b):
-        buf = array.array('c', ' ' * len(b))
+        l = max(len(b), DEFAULT_BUFFER_SIZE) 
+        buf = array.array('c', ' ' * l)
         while True:
             try:
                 recved = sock.recv_into(buf)
@@ -34,7 +50,7 @@ if sys.version_info < (2, 7, 0, 'final'):
 else:
     _readinto = None
 
-class HttpBodyReader(io.RawIOBase):
+class HttpBodyReader(RawIOBase):
     """ Raw implementation to stream http body """
 
     def __init__(self, http_stream):
@@ -51,7 +67,7 @@ class HttpBodyReader(io.RawIOBase):
         self._checkClosed()
 
         while True:
-            buf = bytearray(io.DEFAULT_BUFFER_SIZE)
+            buf = bytearray(DEFAULT_BUFFER_SIZE)
             recved = self.http_stream.stream.readinto(buf)
             if recved is None:
                 break 
@@ -77,10 +93,10 @@ class HttpBodyReader(io.RawIOBase):
     def close(self):
         if self.closed:
             return
-        io.RawIOBase.close(self)
+        RawIOBase.close(self)
         self.http_stream = None
 
-class IterReader(io.RawIOBase):
+class IterReader(RawIOBase):
     """ A raw reader implementation for iterable """
     def __init__(self, iterable):
         self.iter = iter(iterable)
@@ -108,7 +124,7 @@ class IterReader(io.RawIOBase):
     def close(self):
         if self.closed:
             return
-        io.RawIOBase.close(self)
+        RawIOBase.close(self)
         self.iter = None
 
 class StringReader(IterReader):
@@ -123,14 +139,14 @@ class StringReader(IterReader):
         IterReader.__init__(self, iterable)
 
         
-_blocking_errnos = ( EAGAIN, EWOULDBLOCK )
 
-class SocketReader(io.RawIOBase):
+
+class SocketReader(RawIOBase):
     """ a raw reader for sockets or socket like interface. based 
     on SocketIO object from python3.2 """
     
     def __init__(self, sock):
-        io.RawIOBase.__init__(self)
+        RawIOBase.__init__(self)
         self._sock = sock
         
     def readinto(self, b):
@@ -171,5 +187,5 @@ class SocketReader(io.RawIOBase):
         """
         if self.closed:
             return
-        io.RawIOBase.close(self)
+        RawIOBase.close(self)
         self._sock = None

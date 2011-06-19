@@ -4,6 +4,9 @@ import socket
 from http_parser.http import HttpStream
 from http_parser.reader import SocketReader
 
+
+from http_parser.parser import HttpParser
+
 from http_parser.util import b
 
 def main():
@@ -13,6 +16,7 @@ def main():
         s.send(b("GET / HTTP/1.1\r\nHost: gunicorn.org\r\n\r\n"))
         p = HttpStream(SocketReader(s))
         print(p.headers())
+
         print(p.body_file().read())
     finally:
         s.close()

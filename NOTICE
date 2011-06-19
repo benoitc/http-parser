@@ -110,3 +110,16 @@ products or services of Licensee, or any third party.
 By copying, installing or otherwise using Python 2.7.1, Licensee agrees
 to be bound by the terms and conditions of this License Agreement.
 
+
+py25.IOBase, py25.RawIOBase, py25.BufferedReader, py25.TextIOWrapper:
+---------------------------------------------------------------------
+
+Partial implementation of io classes from python 2.7. Only read
+functions have been ported.
+
+
+Under PSF license.
+
+Copyright © 2001-2010 Python Software Foundation; All Rights Reserved
+
+

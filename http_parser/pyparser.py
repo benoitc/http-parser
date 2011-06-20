@@ -201,7 +201,6 @@ class HttpParser(object):
                     nb_parsed = nb_parsed + idx + 2
                     rest = data[idx+2:]
                     data = b("")
-                    print type(first_line)
                     if self._parse_firstline(first_line):
                         self._buf = [rest]
                     else:

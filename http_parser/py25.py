@@ -41,6 +41,13 @@ class bytearray(list):
             self.append(byte)
         return self
 
+    def endswith(self, c):
+        return self[-1] == c
+
+    def startswith(self, c):
+        return self[0] == c
+
+
 class IOrderedDict(dict, DictMixin):
 
 
@@ -268,6 +275,8 @@ class IOBase(object):
                 readahead = self.peek(1)
                 if not readahead:
                     return 1
+
+                readhead = "".join(readhead)
                 n = (readahead.find("\n") + 1) or len(readahead)
                 if limit >= 0:
                     n = min(n, limit)

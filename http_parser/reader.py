@@ -63,7 +63,10 @@ class HttpBodyReader(RawIOBase):
             return 0
         
         self._checkReadable()
-        self._checkClosed()
+        try:
+            self._checkClosed()
+        except AttributeError:
+            pass
 
         while True:
             buf = bytearray(DEFAULT_BUFFER_SIZE)

@@ -276,7 +276,7 @@ class IOBase(object):
                 if not readahead:
                     return 1
 
-                readhead = "".join(readhead)
+                readahead = "".join(readahead)
                 n = (readahead.find("\n") + 1) or len(readahead)
                 if limit >= 0:
                     n = min(n, limit)

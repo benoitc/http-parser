@@ -61,6 +61,11 @@ class IOrderedDict(dict, DictMixin):
         self.update(*args, **kwds)
         self.__lower = {}
 
+    def get(self, key, default=None):
+        if key in self:
+            return self[key]
+        return default
+
     def clear(self):
         self.__end = end = []
         end += [None, end, end]         # sentinel node for doubly linked list

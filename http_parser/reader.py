@@ -33,11 +33,11 @@ if sys.version_info < (2, 7, 0, 'final'):
     import array
     def _readinto(sock, b):
         l = max(len(b), DEFAULT_BUFFER_SIZE) 
-        buf = array.array('c', ' ' * l)
         while True:
             try:
-                recved = sock.recv_into(buf)
-                b[0:recved] = buf.tostring()
+                buf = sock.recv(l)
+                recved = len(buf)
+                b[0:recved] = buf
                 return recved
             except socket.error, e:
                 n = e.args[0]

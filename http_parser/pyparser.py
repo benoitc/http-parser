@@ -5,6 +5,7 @@
 
 import os
 import re
+import sys
 import urlparse
 import zlib
 
@@ -172,12 +173,12 @@ class HttpParser(object):
     def should_keep_alive(self):
         """ return True if the connection should be kept alive
         """
-        hconn = self.headers.get('connection', "").lower()
+        hconn = self._headers.get('connection', "").lower()
         if hconn == "close":
             return False
         elif hconn == "keep-alive":
             return True
-        return self.version == (1, 1)
+        return self._version == (1, 1)
         
     def execute(self, data, length):
         # end of body can be passed manually by putting a length of 0
@@ -199,6 +200,7 @@ class HttpParser(object):
                     self._buf.append(data[:idx])
                     first_line = bytes_to_str(b("").join(self._buf))
                     nb_parsed = nb_parsed + idx + 2
+                    
                     rest = data[idx+2:]
                     data = b("")
                     if self._parse_firstline(first_line):
@@ -211,11 +213,11 @@ class HttpParser(object):
                     data = b("")
 
                 try:
-                    ret = self._parse_headers(b("").join(self._buf))
+                    to_parse = b("").join(self._buf)
+                    ret = self._parse_headers(to_parse)
                     if not ret:
-                        self.__on_headers_complete = True
                         return length
-                    nb_parsed = nb_parsed + (len(rest) - ret)
+                    nb_parsed = nb_parsed + (len(to_parse) - ret)
                 except InvalidHeader, e:
                     self.errno = INVALID_HEADER 
                     self.errstr = str(e)
@@ -251,7 +253,7 @@ class HttpParser(object):
                 except InvalidRequestLine:
                     self._parse_response_line(line)
             elif self.kind == 1:
-                self._parse_respone_line(line)
+                self._parse_response_line(line)
             elif self.kind == 0:
                 self._parse_request_line(line)
         except InvalidRequestLine, e:
@@ -263,6 +265,7 @@ class HttpParser(object):
     def _parse_response_line(self, line):
         bits = line.split(None, 1)
         if len(bits) != 2:
+            print "ici"
             raise InvalidRequestLine(line)
             
         # version 
@@ -314,13 +317,13 @@ class HttpParser(object):
     def _parse_headers(self, data):
         idx = data.find(b("\r\n\r\n"))
         if idx < 0: # we don't have all headers
+            print "mm"
             return False
 
-        
         # Split lines on \r\n keeping the \r\n on each line
         lines = [bytes_to_str(line) + "\r\n" for line in
                 data[:idx].split(b("\r\n"))]
-        
+       
         # Parse headers into key/value pairs paying attention
         # to continuation lines.
         while len(lines):
@@ -350,7 +353,6 @@ class HttpParser(object):
             key =  'HTTP_%s' % name.upper().replace('-','_')
             self._environ[key] = value
 
-        
         # detect now if body is sent by chunks.
         clen = self._headers.get('content-length')
         te = self._headers.get('transfer-encoding', '').lower()
@@ -358,10 +360,12 @@ class HttpParser(object):
         if clen is not None:
             try:
                 self._clen_rest = self._clen = int(clen)
-            except ValieError:
+            except ValueError:
                 pass
         else:
             self._chunked = (te == 'chunked')
+            if not self._chunked:
+                self._clen_rest = sys.maxint
 
         # detect encoding and set decompress object 
         encoding = self._headers.get('content-encoding')

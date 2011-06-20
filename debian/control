@@ -1,0 +1,15 @@
+Source: http-parser
+Section: python
+Priority: optional
+Maintainer: Benoit Chesneau <benoitc@e-engura.com>
+Build-Depends: debhelper (>= 7), python-support, python-setuptools
+Standards-Version: 3.9.0.0
+Homepage: http://github.com/benoitc/http-parser
+
+Package: python-http-parser
+Architecture: all
+Depends: ${python:Depends}, ${shlibs:Depends}, ${misc:Depends}
+Provides: ${python:Provides}
+Description: Python http request/response parser
+ HTTP request/response parser for Python in C under MIT License, based on
+ http-parser from Ryan Dahl.

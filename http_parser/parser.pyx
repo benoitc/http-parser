@@ -319,7 +319,6 @@ cdef class HttpParser:
         in a buffer rather than creating a new string. """
         l = len(barray)
         body = b("").join(self._data.body)
-        print "len recv into %s" % l
         m = min(len(body), l)
         data, rest = body[:m], body[m:]
         barray[0:m] = data

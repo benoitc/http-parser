@@ -47,9 +47,6 @@ io.RawIOBase object.
 Example of HttpStream
 +++++++++++++++++++++
 
-Note: HttpStream object works only with python 2.6 and sup (and pypy),
-Only HttpParser object is available for Python 2.5.
-
 ex::
     
     #!/usr/bin/env python

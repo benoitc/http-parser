@@ -18,7 +18,6 @@ try:
 except ImportError:
     from http_parser.py25 import DEFAULT_BUFFER_SIZE, RawIOBase
 
-
 try:
     bytes
     bytearray
@@ -58,7 +57,7 @@ class HttpBodyReader(RawIOBase):
         self.eof = False
 
     def readinto(self, b):
-        if self.http_stream.parser.is_message_complete():
+        if self.http_stream.parser.is_message_complete() or self.eof:
             if  self.http_stream.parser.is_partial_body():
                 return self.http_stream.parser.recv_body_into(b)
             return 0
@@ -79,10 +78,12 @@ class HttpBodyReader(RawIOBase):
 
             if self.http_stream.parser.is_partial_body() or recved == 0:
                 break
+            elif self.http_stream.parser.is_message_complete():
+                break
         
         if not self.http_stream.parser.is_partial_body():
             self.eof = True
-            del b[0:] 
+            b = bytes('') 
             return len(b)
 
         return self.http_stream.parser.recv_body_into(b)

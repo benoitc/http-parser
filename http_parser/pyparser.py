@@ -265,7 +265,6 @@ class HttpParser(object):
     def _parse_response_line(self, line):
         bits = line.split(None, 1)
         if len(bits) != 2:
-            print "ici"
             raise InvalidRequestLine(line)
             
         # version 
@@ -317,7 +316,6 @@ class HttpParser(object):
     def _parse_headers(self, data):
         idx = data.find(b("\r\n\r\n"))
         if idx < 0: # we don't have all headers
-            print "mm"
             return False
 
         # Split lines on \r\n keeping the \r\n on each line

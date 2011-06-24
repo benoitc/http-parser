@@ -8,6 +8,7 @@ from __future__ import with_statement
 from distutils.core import setup
 from distutils.command import build_ext
 from distutils.extension import Extension
+from distutils.errors import CCompilerError, DistutilsExecError
 import glob
 from imp import load_source
 import os
@@ -75,10 +76,11 @@ class my_build_ext(build_ext.build_ext):
     def build_extension(self, ext):
         if self.cython:
             self.compile_cython()
-        result = build_ext.build_ext.build_extension(self, ext)
-        # hack: create a symlink from build/../parser.so to http_parser/parser.so
-        # to prevent "ImportError: cannot import name core" failures
         try:
+            result = build_ext.build_ext.build_extension(self, ext)
+            # hack: create a symlink from build/../parser.so to http_parser/parser.so
+            # to prevent "ImportError: cannot import name core" failures
+
             fullname = self.get_ext_fullname(ext.name)
             modpath = fullname.split('.')
             filename = self.get_ext_filename(ext.name)
@@ -104,10 +106,14 @@ class my_build_ext(build_ext.build_ext):
                             path_to_core_so))
                         import shutil
                         shutil.copyfile(path_to_build_core_so, path_to_core_so)
-        except Exception:
-            traceback.print_exc()
-        return result
+            return result
 
+        except (Exception, CCompilerError,):
+            traceback.print_exc()
+            sys.stderr.write("warning: can't build parser.c speedup.\n\n")
+            sys.stderr.write("You can can safely ignire previous error.\n")
+
+        
 
 def main():
     http_parser = load_source("http_parser", os.path.join("http_parser",

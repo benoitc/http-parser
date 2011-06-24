@@ -111,7 +111,7 @@ class my_build_ext(build_ext.build_ext):
         except (Exception, CCompilerError,):
             traceback.print_exc()
             sys.stderr.write("warning: can't build parser.c speedup.\n\n")
-            sys.stderr.write("You can can safely ignire previous error.\n")
+            sys.stderr.write("You can can safely ignore previous error.\n")
 
         
 

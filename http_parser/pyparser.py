@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -
 #
-# This file is part of http-parser released under the MIT license. 
+# This file is part of http-parser released under the MIT license.
 # See the NOTICE for more information.
 
 import os
@@ -40,9 +40,9 @@ class HttpParser(object):
         # errors vars
         self.errno = None
         self.errstr = ""
-        
+
         # protected variables
-        self._buf = [] 
+        self._buf = []
         self._version = None
         self._method = None
         self._status_code = None
@@ -104,7 +104,7 @@ class HttpParser(object):
             if hkey in environ:
                 environ[key] = environ.pop(hkey)
 
-        script_name = environ.get('HTTP_SCRIPT_NAME', 
+        script_name = environ.get('HTTP_SCRIPT_NAME',
                 os.environ.get("SCRIPT_NAME", ""))
         if script_name:
             path_info = self._path.split(script_name, 1)[1]
@@ -120,7 +120,7 @@ class HttpParser(object):
             environ['wsgi.url_scheme'] = "https"
         else:
             environ['wsgi.url_scheme'] = "http"
-            
+
         return environ
 
     def recv_body(self):
@@ -151,7 +151,7 @@ class HttpParser(object):
         return self._headers.get('connection', "") == "upgrade"
 
     def is_headers_complete(self):
-        """ return True if all headers have been parsed. """ 
+        """ return True if all headers have been parsed. """
         return self.__on_headers_complete
 
     def is_partial_body(self):
@@ -169,7 +169,7 @@ class HttpParser(object):
     def is_chunked(self):
         """ return True if Transfer-Encoding header value is chunked"""
         return self._chunked
-        
+
     def should_keep_alive(self):
         """ return True if the connection should be kept alive
         """
@@ -179,7 +179,7 @@ class HttpParser(object):
         elif hconn == "keep-alive":
             return True
         return self._version == (1, 1)
-        
+
     def execute(self, data, length):
         # end of body can be passed manually by putting a length of 0
 
@@ -200,7 +200,7 @@ class HttpParser(object):
                     self._buf.append(data[:idx])
                     first_line = bytes_to_str(b("").join(self._buf))
                     nb_parsed = nb_parsed + idx + 2
-                    
+
                     rest = data[idx+2:]
                     data = b("")
                     if self._parse_firstline(first_line):
@@ -219,7 +219,7 @@ class HttpParser(object):
                         return length
                     nb_parsed = nb_parsed + (len(to_parse) - ret)
                 except InvalidHeader, e:
-                    self.errno = INVALID_HEADER 
+                    self.errno = INVALID_HEADER
                     self.errstr = str(e)
                     return nb_parsed
             elif not self.__on_message_complete:
@@ -266,18 +266,18 @@ class HttpParser(object):
         bits = line.split(None, 1)
         if len(bits) != 2:
             raise InvalidRequestLine(line)
-            
-        # version 
+
+        # version
         matchv = VERSION_RE.match(bits[0])
         if matchv is None:
             raise InvalidRequestLine("Invalid HTTP version: %s" % bits[0])
         self._version = (int(matchv.group(1)), int(matchv.group(2)))
-            
+
         # status
         matchs = STATUS_RE.match(bits[1])
         if matchs is None:
             raise InvalidRequestLine("Invalid status %" % bits[1])
-        
+
         self._status = bits[1]
         self._status_code = int(matchs.group(1))
         self._reason = matchs.group(2)
@@ -298,7 +298,7 @@ class HttpParser(object):
         self._path = parts.path or ""
         self._query_string = parts.query or ""
         self._fragment = parts.fragment or ""
-        
+
         # Version
         match = VERSION_RE.match(bits[2])
         if match is None:
@@ -312,7 +312,7 @@ class HttpParser(object):
             "RAW_URI": self._url,
             "REQUEST_METHOD": self._method,
             "SERVER_PROTOCOL": bits[2]})
-    
+
     def _parse_headers(self, data):
         idx = data.find(b("\r\n\r\n"))
         if idx < 0: # we don't have all headers
@@ -321,7 +321,7 @@ class HttpParser(object):
         # Split lines on \r\n keeping the \r\n on each line
         lines = [bytes_to_str(line) + "\r\n" for line in
                 data[:idx].split(b("\r\n"))]
-       
+
         # Parse headers into key/value pairs paying attention
         # to continuation lines.
         while len(lines):
@@ -334,12 +334,12 @@ class HttpParser(object):
             if HEADER_RE.search(name):
                 raise InvalidHeader("invalid header name %s" % name)
             name, value = name.strip(), [value.lstrip()]
-            
+
             # Consume value continuation lines
             while len(lines) and lines[0].startswith((" ", "\t")):
                 value.append(lines.pop(0))
             value = ''.join(value).rstrip()
-            
+
             # multiple headers
             if name in self._headers:
                 value = "%s,%s" % (headers[name], value)
@@ -365,13 +365,13 @@ class HttpParser(object):
             if not self._chunked:
                 self._clen_rest = sys.maxint
 
-        # detect encoding and set decompress object 
+        # detect encoding and set decompress object
         encoding = self._headers.get('content-encoding')
         if encoding == "gzip":
             self.__decompress_obj = zlib.decompressobj(16+zlib.MAX_WBITS)
         elif encoding == "deflate":
             self.__decompress_obj = zlib.decompressobj()
-    
+
         rest = data[idx+4:]
         self._buf = [rest]
         self.__on_headers_complete = True
@@ -392,7 +392,7 @@ class HttpParser(object):
 
             if self._clen_rest <= 0:
                 self.__on_message_complete = True
-            return  
+            return
         else:
             data = b("").join(self._buf)
             try:
@@ -408,7 +408,7 @@ class HttpParser(object):
 
             if size is None or len(rest) < size:
                 return None
-            
+
 
             body_part, rest = rest[:size], rest[size:]
             if len(rest) < 2:

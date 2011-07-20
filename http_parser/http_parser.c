@@ -249,7 +249,7 @@ enum state
   , s_chunk_size
   , s_chunk_parameters
   , s_chunk_size_almost_done
-  
+
   , s_headers_almost_done
   /* Important: 's_headers_almost_done' must be the last 'header' state. All
    * states beyond this must be 'body' states. It is used for overflow

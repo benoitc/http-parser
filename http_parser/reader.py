@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -
 #
-# This file is part of http-parser released under the MIT license. 
+# This file is part of http-parser released under the MIT license.
 
 # See the NOTICE for more information.
 
-from errno import EINTR, EAGAIN, EWOULDBLOCK 
+from errno import EINTR, EAGAIN, EWOULDBLOCK
 import socket
 import sys
 import types
@@ -32,7 +32,7 @@ if sys.version_info < (2, 7, 0, 'final'):
     # in python 2.6 socket.recv_into doesn't support bytesarray
     import array
     def _readinto(sock, b):
-        l = max(len(b), DEFAULT_BUFFER_SIZE) 
+        l = max(len(b), DEFAULT_BUFFER_SIZE)
         while True:
             try:
                 buf = sock.recv(l)
@@ -61,7 +61,7 @@ class HttpBodyReader(RawIOBase):
             if  self.http_stream.parser.is_partial_body():
                 return self.http_stream.parser.recv_body_into(b)
             return 0
-        
+
         self._checkReadable()
         try:
             self._checkClosed()
@@ -72,8 +72,8 @@ class HttpBodyReader(RawIOBase):
             buf = bytearray(DEFAULT_BUFFER_SIZE)
             recved = self.http_stream.stream.readinto(buf)
             if recved is None:
-                break 
-                
+                break
+
             del buf[recved:]
             nparsed = self.http_stream.parser.execute(bytes(buf), recved)
             if nparsed != recved:
@@ -83,10 +83,10 @@ class HttpBodyReader(RawIOBase):
                 break
             elif self.http_stream.parser.is_message_complete():
                 break
-        
+
         if not self.http_stream.parser.is_partial_body():
             self.eof = True
-            b = bytes('') 
+            b = bytes('')
             return len(b)
 
         return self.http_stream.parser.recv_body_into(b)
@@ -142,17 +142,17 @@ class StringReader(IterReader):
             iterable = string
         IterReader.__init__(self, iterable)
 
-        
+
 
 
 class SocketReader(RawIOBase):
-    """ a raw reader for sockets or socket like interface. based 
+    """ a raw reader for sockets or socket like interface. based
     on SocketIO object from python3.2 """
-    
+
     def __init__(self, sock):
         RawIOBase.__init__(self)
         self._sock = sock
-        
+
     def readinto(self, b):
         try:
             self._checkClosed()

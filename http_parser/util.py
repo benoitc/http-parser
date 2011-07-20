@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -
 #
-# This file is part of http-parser released under the MIT license. 
+# This file is part of http-parser released under the MIT license.
 # See the NOTICE for more information.
 
 
@@ -10,13 +10,13 @@ if sys.version_info[0] == 3:
     from urllib.parse import unquote
     def b(s):
         return s.encode("latin-1")
-   
+
     def bytes_to_str(b):
         return str(b, 'latin1')
 
     import io
     StringIO = io.StringIO
-    
+
 else:
     from urllib import unquote
     def b(s):
@@ -31,7 +31,7 @@ else:
     except ImportError:
         import StringIO
         StringIO = BytesIO = StringIO.StringIO
-    
+
 
 if sys.version_info < (2, 6, 0, 'final'):
     from py25 import IOrderedDict

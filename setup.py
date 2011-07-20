@@ -67,6 +67,7 @@ def main(with_binary):
         url='http://github.com/benoitc/http-parser',
         classifiers=CLASSIFIERS,
         packages=find_packages(),
+        platforms=['any'],
         # data_files=[('http_parser',
         #     ['LICENSE', 'MANIFEST.in', 'NOTICE', 'README.rst', 'THANKS']
         # )],

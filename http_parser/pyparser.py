@@ -342,7 +342,7 @@ class HttpParser(object):
             
             # multiple headers
             if name in self._headers:
-                value = "%s,%s" % (headers[name], value)
+                value = "%s,%s" % (self._headers[name], value)
 
             # store new header value
             self._headers[name] = value

@@ -147,6 +147,7 @@ def main():
             license = 'MIT',
             url = 'http://github.com/benoitc/http-parser',
             classifiers = CLASSIFIERS,
+            platforms=['any'],
             packages = PACKAGES.keys(),
             package_dir = PACKAGES,
             data_files = DATA_FILES,

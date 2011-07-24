@@ -110,14 +110,17 @@ cdef int on_header_value_cb(http_parser *parser, char *at,
         size_t length):
     res = <object>parser.data
     header_value = bytes_to_str(PyBytes_FromStringAndSize(at, length))
-    
+   
+    if res._last_field in res.headers:
+        header_value = "%s,%s" % (res.headers[res._last_field],
+                header_value)
+
     # update wsgi environ
     key =  'HTTP_%s' % res._last_field.upper().replace('-','_')
-    res.environ[key] = res.environ.get(key, '') + header_value
+    res.environ[key] = header_value
 
     # add to headers
-    res.headers[res._last_field] = res.headers.get(res._last_field,
-            '') + header_value
+    res.headers[res._last_field] = header_value
     res._last_was_value = True
     return 0
 

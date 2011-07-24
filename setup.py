@@ -7,6 +7,7 @@ from __future__ import with_statement
 
 from distutils.core import setup
 from distutils.command import build_ext
+from distutils.command.install import INSTALL_SCHEMES
 from distutils.extension import Extension
 from distutils.errors import CCompilerError, DistutilsExecError
 import glob
@@ -40,6 +41,9 @@ MODULES = ["http_parser"]
 INCLUDE_DIRS = ["http_parser"]
 SOURCES = [os.path.join("http_parser", "parser.c"),
         os.path.join("http_parser", "http_parser.c")]
+
+for scheme in INSTALL_SCHEMES.values():
+    scheme['data'] = scheme['purelib']
 
 class my_build_ext(build_ext.build_ext):
     user_options = (build_ext.build_ext.user_options

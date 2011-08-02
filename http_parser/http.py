@@ -180,7 +180,7 @@ class HttpStream(object):
 
         # parse data
         nparsed = self.parser.execute(bytes(b), recved)
-        if nparsed != recved:
+        if nparsed != recved and not self.parser.is_message_complete():
             raise ParserError("nparsed != recved")
 
         if recved == 0:

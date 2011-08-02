@@ -32,7 +32,6 @@ else:
         import StringIO
         StringIO = BytesIO = StringIO.StringIO
 
-
 if sys.version_info < (2, 6, 0, 'final'):
     from py25 import IOrderedDict
 else:

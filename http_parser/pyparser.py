@@ -294,7 +294,7 @@ class HttpParser(object):
 
         # URI
         self._url = bits[1]
-        parts = urlparse.urlparse(bits[1])
+        parts = urlparse.urlsplit(bits[1])
         self._path = parts.path or ""
         self._query_string = parts.query or ""
         self._fragment = parts.fragment or ""

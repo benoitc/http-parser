@@ -169,6 +169,11 @@ cdef class HttpParser:
     cdef http_parser_settings _settings
     cdef object _data
 
+    cdef str _path
+    cdef str _query_string
+    cdef str _fragment
+    cdef object _parsed_url
+
     def __init__(self, kind=2, decompress=False):
         """ constructor of HttpParser object. 
         

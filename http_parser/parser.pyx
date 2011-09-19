@@ -5,6 +5,7 @@
 
 from libc.stdlib cimport *
 import os
+import urlparse
 import zlib
 
 from http_parser.util import b, bytes_to_str, IOrderedDict, unquote
@@ -21,7 +22,7 @@ cdef extern from "http_parser.h" nogil:
         HTTP_CONNECT, HTTP_OPTIONS, HTTP_TRACE, HTTP_COPY, HTTP_LOCK,
         HTTP_MKCOL, HTTP_MOVE, HTTP_PROPFIND, HTTP_PROPPATCH, HTTP_UNLOCK, 
         HTTP_REPORT, HTTP_MKACTIVITY, HTTP_CHECKOUT, HTTP_MERGE, HTTP_MSEARCH,
-        HTTP_NOTIFY, HTTP_SUBSCRIBE, HTTP_UNSUBSCRIBE
+        HTTP_NOTIFY, HTTP_SUBSCRIBE, HTTP_UNSUBSCRIBE, HTTP_PATCH
 
 
     cdef enum http_parser_type:
@@ -41,10 +42,7 @@ cdef extern from "http_parser.h" nogil:
     
     struct http_parser_settings:
         http_cb on_message_begin
-        http_data_cb on_path
-        http_data_cb on_query_string
         http_data_cb on_url
-        http_data_cb on_fragment
         http_data_cb on_header_field
         http_data_cb on_header_value
         http_cb on_headers_complete
@@ -63,36 +61,13 @@ cdef extern from "http_parser.h" nogil:
     char *http_method_str(http_method)
 
 
-cdef int on_path_cb(http_parser *parser, char *at,
-        size_t length):
-    res = <object>parser.data
-    value = bytes_to_str(PyBytes_FromStringAndSize(at, length))
-
-    res.path = value
-    res.environ['PATH_INFO'] = unquote(value)
-    return 0
-
-cdef int on_query_string_cb(http_parser *parser, char *at, 
-        size_t length):
-    res = <object>parser.data
-    value = bytes_to_str(PyBytes_FromStringAndSize(at, length))
-    res.query_string = value
-    res.environ['QUERY_STRING'] = value
-    return 0
-
 cdef int on_url_cb(http_parser *parser, char *at,
         size_t length):
     res = <object>parser.data
     value = bytes_to_str(PyBytes_FromStringAndSize(at, length))
+
     res.url = value
     res.environ['RAW_URI'] = value
-    return 0
-
-cdef int on_fragment_cb(http_parser *parser, char *at, 
-        size_t length):
-    res = <object>parser.data
-    value = PyBytes_FromStringAndSize(at, length)
-    res.fragment = bytes_to_str(value)
     return 0
 
 cdef int on_header_field_cb(http_parser *parser, char *at, 
@@ -169,10 +144,7 @@ cdef int on_message_complete_cb(http_parser *parser):
 class _ParserData(object):
 
     def __init__(self, decompress=False):
-        self.path = ""
-        self.query_string = ""
         self.url = ""
-        self.fragment = ""
         self.body = []
         self.headers = IOrderedDict()
         self.environ = {}
@@ -218,12 +190,13 @@ cdef class HttpParser:
         http_parser_init(&self._parser, parser_type)
         self._data = _ParserData(decompress=decompress)
         self._parser.data = <void *>self._data
+        self._parsed_url = None
+        self._path = ""
+        self._query_string = ""
+        self._fragment = ""
 
         # set callback
-        self._settings.on_path = <http_data_cb>on_path_cb
-        self._settings.on_query_string = <http_data_cb>on_query_string_cb
         self._settings.on_url = <http_data_cb>on_url_cb
-        self._settings.on_fragment = <http_data_cb>on_fragment_cb
         self._settings.on_body = <http_data_cb>on_body_cb
         self._settings.on_header_field = <http_data_cb>on_header_field_cb
         self._settings.on_header_value = <http_data_cb>on_header_value_cb
@@ -250,6 +223,8 @@ cdef class HttpParser:
         """ get HTTP method as string"""
         return http_method_str(<http_method>self._parser.method)
 
+    
+
     def get_status_code(self):
         """ get status code of a response as integer """
         return self._parser.status_code
@@ -258,18 +233,29 @@ cdef class HttpParser:
         """ get full url of the request """
         return self._data.url
 
+    def maybe_parse_url(self):
+        raw_url = self.get_url()
+        if not self._parsed_url and raw_url:
+            self._parsed_url = urlparse.urlsplit(raw_url)
+            self._path =  self._parsed_url.path or ""
+            self._query_string = self._parsed_url.query or ""
+            self._fragment = self._parsed_url.fragments or ""
+
     def get_path(self):
         """ get path of the request (url without query string and
         fragment """
-        return self._data.path
+        self.maybe_parse_url()
+        return self._path
 
     def get_query_string(self):
         """ get query string of the url """
-        return self._data.query_string
+        self.maybe_parse_url()
+        return self._query_string
 
     def get_fragment(self):
         """ get fragment of the url """
-        return self._data.fragment
+        self.maybe_parse_url()
+        return self._fragment
 
     def get_headers(self):
         """ get request/response headers, headers are returned in a
@@ -278,7 +264,11 @@ cdef class HttpParser:
 
     def get_wsgi_environ(self):
         """ get WSGI environ based on the current request """
+        self.maybe_parse_url()
+
         environ = self._data.environ
+
+        environ['QUERY_STRING'] = self._query_string
 
         # clean special keys
         for key in ("CONTENT_LENGTH", "CONTENT_TYPE", "SCRIPT_NAME"):
@@ -290,11 +280,14 @@ cdef class HttpParser:
                 os.environ.get("SCRIPT_NAME", ""))
 
         if script_name:
-            path_info = self.get_path() 
+            path_info = self._path 
             path_info = path_info.split(script_name, 1)[1]
-            environ.update({
-                'PATH_INFO': path_info,
-                'SCRIPT_NAME': script_name})
+            environ.update({'PATH_INFO': path_info, 
+                            'SCRIPT_NAME': script_name})
+        else:
+            environ.update({'PATH_INFO': self._path,
+                            'SCRIPT_NAME': ""})
+
 
         if environ.get('HTTP_X_FORWARDED_PROTOCOL', '').lower() == "ssl":
             environ['wsgi.url_scheme']= "https"

@@ -244,7 +244,7 @@ cdef class HttpParser:
             self._parsed_url = urlparse.urlsplit(raw_url)
             self._path =  self._parsed_url.path or ""
             self._query_string = self._parsed_url.query or ""
-            self._fragment = self._parsed_url.fragments or ""
+            self._fragment = self._parsed_url.fragment or ""
 
     def get_path(self):
         """ get path of the request (url without query string and

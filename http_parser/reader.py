@@ -152,27 +152,35 @@ class SocketReader(RawIOBase):
     def __init__(self, sock):
         RawIOBase.__init__(self)
         self._sock = sock
-        
-    def readinto(self, b):
-        try:
-            self._checkClosed()
-        except AttributeError:
-            pass
-        self._checkReadable()
-
-        if _readinto is not None:
+       
+    if _readinto is not None:
+        def readinto(self, b):
+            try:
+                self._checkClosed()
+            except AttributeError:
+                pass
+            self._checkReadable()
             return _readinto(self._sock, b)
 
-        while True:
+    else:
+        def readinto(self, b):
             try:
-                return self._sock.recv_into(b)
-            except socket.error, e:
-                n = e.args[0]
-                if n == EINTR:
-                    continue
-                if n in _blocking_errnos:
-                    return None
-                raise
+                self._checkClosed()
+            except AttributeError:
+                pass
+            self._checkReadable()
+            
+            while True:
+                try:
+                    return self._sock.recv_into(b)
+                except socket.error, e:
+                    n = e.args[0]
+                    if n == EINTR:
+                        continue
+                    if n in _blocking_errnos:
+                        return None
+                    raise
+
 
     def readable(self):
         """True if the SocketIO is open for reading.

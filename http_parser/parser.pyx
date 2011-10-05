@@ -67,7 +67,6 @@ cdef int on_url_cb(http_parser *parser, char *at,
     value = bytes_to_str(PyBytes_FromStringAndSize(at, length))
 
     res.url = value
-    res.environ['RAW_URI'] = value
     return 0
 
 cdef int on_header_field_cb(http_parser *parser, char *at, 
@@ -270,10 +269,7 @@ cdef class HttpParser:
     def get_wsgi_environ(self):
         """ get WSGI environ based on the current request """
         self.maybe_parse_url()
-
         environ = self._data.environ
-
-        environ['QUERY_STRING'] = self._query_string
 
         # clean special keys
         for key in ("CONTENT_LENGTH", "CONTENT_TYPE", "SCRIPT_NAME"):
@@ -285,27 +281,19 @@ cdef class HttpParser:
                 os.environ.get("SCRIPT_NAME", ""))
 
         if script_name:
-            path_info = self._path 
-            path_info = path_info.split(script_name, 1)[1]
-            environ.update({'PATH_INFO': path_info, 
-                            'SCRIPT_NAME': script_name})
+            path_info = self._path.split(script_name, 1)[1]
         else:
-            environ.update({'PATH_INFO': self._path,
-                            'SCRIPT_NAME': ""})
+            path_info = self._path
 
-
-        if environ.get('HTTP_X_FORWARDED_PROTOCOL', '').lower() == "ssl":
-            environ['wsgi.url_scheme']= "https"
-        elif environ.get('HTTP_X_FORWARDED_SSL', '').lower() == "on":
-            environ['wsgi.url_scheme'] = "https"
-        else:
-            environ['wsgi.url_scheme'] = "http"
-
-        # add missing environ var
         environ.update({
             'REQUEST_METHOD': self.get_method(),
             'SERVER_PROTOCOL': "HTTP/%s" % ".".join(map(str, 
-                self.get_version()))})
+                self.get_version())),
+            'PATH_INFO': path_info,
+            'SCRIPT_NAME': script_name,
+            'QUERY_STRING': self._query_string,
+            'RAW_URI': self._data.url})
+
         return environ
 
     def recv_body(self):

@@ -129,7 +129,7 @@ You can find more docs in the code (or use a doc generator).
 Copyright
 ---------
 
-2011 (c) Benoît Chesneau <benoitc@e-engura.org>
+2011,2012 (c) Benoît Chesneau <benoitc@e-engura.org>
 
 
 .. http-parser_ https://github.com/ry/http-parser

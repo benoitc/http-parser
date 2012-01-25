@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -
 #
-# This file is part of http-parser released under the MIT license. 
+# This file is part of http-parser released under the MIT license.
 # See the NOTICE for more information.
 
 try:
@@ -29,8 +29,8 @@ HTTP_RESPONSE = 1
 HTTP_REQUEST = 0
 
 class NoMoreData(Exception):
-    """ exception raised when trying to parse headers but 
-    we didn't get all data needed. 
+    """ exception raised when trying to parse headers but
+    we didn't get all data needed.
     """
 
 class ParserError(Exception):
@@ -39,15 +39,15 @@ class ParserError(Exception):
 class HttpStream(object):
     """ An HTTP parser providing higher-level access to a readable,
     sequential io.RawIOBase object. You can use implementions of
-    http_parser.reader (IterReader, StringReader, SocketReader) or 
+    http_parser.reader (IterReader, StringReader, SocketReader) or
     create your own.
     """
 
     def __init__(self, stream, kind=HTTP_BOTH, decompress=False):
-        """ constructor of HttpStream. 
+        """ constructor of HttpStream.
 
         :attr stream: an io.RawIOBase object
-        :attr kind: Int,  could be 0 to parseonly requests, 
+        :attr kind: Int,  could be 0 to parseonly requests,
         1 to parse only responses or 2 if we want to let
         the parser detect the type.
         """
@@ -84,7 +84,7 @@ class HttpStream(object):
         """ get query string of the url """
         self._check_headers_complete()
         return self.parser.get_query_string()
-       
+
     def fragment(self):
         """ get fragment of the url """
         self._check_headers_complete()
@@ -93,7 +93,7 @@ class HttpStream(object):
     def version(self):
         self._check_headers_complete()
         return self.parser.get_version()
-     
+
     def status_code(self):
         """ get status code of a response as integer """
         self._check_headers_complete()
@@ -110,33 +110,33 @@ class HttpStream(object):
         """ get HTTP method as string"""
         self._check_headers_complete()
         return self.parser.get_method()
-        
+
     def headers(self):
         """ get request/response headers, headers are returned in a
         OrderedDict that allows you to get value using insensitive
         keys."""
-        self._check_headers_complete() 
+        self._check_headers_complete()
         return self.parser.get_headers()
 
     def should_keep_alive(self):
         """ return True if the connection should be kept alive
         """
-        self._check_headers_complete() 
+        self._check_headers_complete()
         return self.parser.should_keep_alive()
 
     def is_chunked(self):
         """ return True if Transfer-Encoding header value is chunked"""
-        self._check_headers_complete() 
+        self._check_headers_complete()
         return self.parser.is_chunked()
 
     def wsgi_environ(self, initial=None):
         """ get WSGI environ based on the current request.
-        
+
         :attr initial: dict, initial values to fill in environ.
         """
         self._check_headers_complete()
         return self.parser.get_wsgi_environ()
-        
+
     def body_file(self, buffering=None, binary=True, encoding=None,
             errors=None, newline=None):
         """ return the body as a buffered stream object. If binary is
@@ -157,18 +157,18 @@ class HttpStream(object):
         text = TextIOWrapper(buffer, encoding, errors, newline)
         return text
 
-    def body_string(self, binary=True, encoding=None, errors=None, 
+    def body_string(self, binary=True, encoding=None, errors=None,
             newline=None):
         """ return body as string """
         return self.body_file(binary=binary, encoding=encoding,
                 newline=newline).read()
-   
+
     def __iter__(self):
         return self
 
     def next(self):
         if self.parser.is_message_complete():
-            raise StopIteration 
+            raise StopIteration
 
         # fetch data
         b = bytearray(DEFAULT_BUFFER_SIZE)
@@ -182,8 +182,8 @@ class HttpStream(object):
         nparsed = self.parser.execute(bytes(b), recved)
         if nparsed != recved and not self.parser.is_message_complete():
             raise ParserError("nparsed != recved")
-            
+
         if recved == 0:
             raise StopIteration
 
-        return bytes(b) 
+        return bytes(b)

@@ -130,7 +130,6 @@ cdef int on_body_cb(http_parser *parser, char *at,
     # decompress the value if needed
     if res.decompress:
         value = res.decompressobj.decompress(value)
-
     res.body.append(value)
     return 0
 
@@ -310,7 +309,7 @@ cdef class HttpParser:
         body = b("").join(self._data.body)
         m = min(len(body), l)
         data, rest = body[:m], body[m:]
-        barray[0:m] = data
+        barray[0:m] = bytes(data)
         if not rest:
             self._data.body = []
             self._data.partial_body = False

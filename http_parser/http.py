@@ -151,10 +151,10 @@ class HttpStream(object):
             buffering = DEFAULT_BUFFER_SIZE
 
         raw = HttpBodyReader(self)
-        buffer = BufferedReader(raw, buffering)
+        buf = BufferedReader(raw, buffering)
         if binary:
-            return buffer
-        text = TextIOWrapper(buffer, encoding, errors, newline)
+            return buf
+        text = TextIOWrapper(buf, encoding, errors, newline)
         return text
 
     def body_string(self, binary=True, encoding=None, errors=None,
@@ -177,9 +177,9 @@ class HttpStream(object):
             raise NoMoreData("no more data")
 
         del b[recved:]
-
+        to_parse = bytes(b)
         # parse data
-        nparsed = self.parser.execute(bytes(b), recved)
+        nparsed = self.parser.execute(to_parse, recved)
         if nparsed != recved and not self.parser.is_message_complete():
             raise ParserError("nparsed != recved (%s != %s)" % (nparsed,
                 recved))
@@ -187,4 +187,4 @@ class HttpStream(object):
         if recved == 0:
             raise StopIteration
 
-        return bytes(b)
+        return to_parse

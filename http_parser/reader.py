@@ -178,7 +178,6 @@ class SocketReader(RawIOBase):
                     if n == EINTR:
                         continue
                     if n in _blocking_errnos:
-                        print "la"
                         return None
                     raise
 

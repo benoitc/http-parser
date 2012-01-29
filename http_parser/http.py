@@ -64,7 +64,7 @@ class HttpStream(object):
             except StopIteration:
                 if self.parser.is_headers_complete():
                     return
-                raise NoMoreData()
+                raise NoMoreData("Can't parse headers")
 
             if self.parser.is_headers_complete():
                 return

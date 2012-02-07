@@ -1,9 +1,11 @@
 http-parser
 -----------
 
-HTTP request/response parser for Python in C under MIT License, based on
-http-parser_ from Ryan Dahl.
+HTTP request/response parser for Python compatible with Python 2.x
+(>=2.5.4), Python 3 and Pypy. If possible a C parser based on
+http-parser_ from Ryan Dahl will be used. 
 
+http-parser is under the MIT license.
 
 Project url: https://github.com/benoitc/http-parser/
 
@@ -11,7 +13,7 @@ Requirements:
 -------------
 
 - Python 2.5 or sup. Pypy latest version.
-- Cython if you need to rebuild the C code
+- Cython if you need to rebuild the C code (Not needed for Pypy)
 
 Installation
 ------------
@@ -127,7 +129,7 @@ You can find more docs in the code (or use a doc generator).
 Copyright
 ---------
 
-2011 (c) Benoît Chesneau <benoitc@e-engura.org>
+2011,2012 (c) Benoît Chesneau <benoitc@e-engura.org>
 
 
 .. http-parser_ https://github.com/ry/http-parser

@@ -36,6 +36,9 @@ class NoMoreData(Exception):
 class ParserError(Exception):
     """ error while parsing http request """
 
+class BadStatusLine(Exception):
+    """ error when status line is invalid """
+
 class HttpStream(object):
     """ An HTTP parser providing higher-level access to a readable,
     sequential io.RawIOBase object. You can use implementions of
@@ -64,39 +67,63 @@ class HttpStream(object):
             except StopIteration:
                 if self.parser.is_headers_complete():
                     return
-                raise NoMoreData()
+                raise NoMoreData("Can't parse headers")
 
             if self.parser.is_headers_complete():
                 return
 
+
+    def _wait_status_line(self, cond):
+        if self.parser.is_headers_complete():
+            return True
+
+        data = ""
+        if not cond():
+            while True:
+                try:
+                    data += self.next()
+                except StopIteration:
+                    if self.parser.is_headers_complete():
+                        return True
+                    raise BadStatusLine(data)
+                if cond():
+                    return True
+        return True
+
+    def _wait_on_url(self):
+        return self._wait_status_line(self.parser.get_url)
+
+    def _wait_on_status(self):
+        return self._wait_status_line(self.parser.get_status_code)
+
     def url(self):
         """ get full url of the request """
-        self._check_headers_complete()
+        self._wait_on_url()
         return self.parser.get_url()
 
     def path(self):
         """ get path of the request (url without query string and
         fragment """
-        self._check_headers_complete()
+        self._wait_on_url()
         return self.parser.get_path()
 
     def query_string(self):
         """ get query string of the url """
-        self._check_headers_complete()
+        self._wait_on_url()
         return self.parser.get_query_string()
 
     def fragment(self):
         """ get fragment of the url """
-        self._check_headers_complete()
+        self._wait_on_url()
         return self.parser.get_fragment()
 
     def version(self):
-        self._check_headers_complete()
+        self._wait_on_status()
         return self.parser.get_version()
 
     def status_code(self):
         """ get status code of a response as integer """
-        self._check_headers_complete()
+        self._wait_on_status()
         return self.parser.get_status_code()
 
     def status(self):
@@ -108,7 +135,7 @@ class HttpStream(object):
 
     def method(self):
         """ get HTTP method as string"""
-        self._check_headers_complete()
+        self._wait_on_status()
         return self.parser.get_method()
 
     def headers(self):
@@ -151,10 +178,10 @@ class HttpStream(object):
             buffering = DEFAULT_BUFFER_SIZE
 
         raw = HttpBodyReader(self)
-        buffer = BufferedReader(raw, buffering)
+        buf = BufferedReader(raw, buffering)
         if binary:
-            return buffer
-        text = TextIOWrapper(buffer, encoding, errors, newline)
+            return buf
+        text = TextIOWrapper(buf, encoding, errors, newline)
         return text
 
     def body_string(self, binary=True, encoding=None, errors=None,
@@ -177,13 +204,14 @@ class HttpStream(object):
             raise NoMoreData("no more data")
 
         del b[recved:]
-
+        to_parse = bytes(b)
         # parse data
-        nparsed = self.parser.execute(bytes(b), recved)
+        nparsed = self.parser.execute(to_parse, recved)
         if nparsed != recved and not self.parser.is_message_complete():
-            raise ParserError("nparsed != recved")
+            raise ParserError("nparsed != recved (%s != %s)" % (nparsed,
+                recved))
 
         if recved == 0:
             raise StopIteration
 
-        return bytes(b)
+        return to_parse

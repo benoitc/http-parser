@@ -169,7 +169,7 @@ class SocketReader(RawIOBase):
             except AttributeError:
                 pass
             self._checkReadable()
-            
+
             while True:
                 try:
                     return self._sock.recv_into(b)
@@ -180,7 +180,6 @@ class SocketReader(RawIOBase):
                     if n in _blocking_errnos:
                         return None
                     raise
-
 
     def readable(self):
         """True if the SocketIO is open for reading.

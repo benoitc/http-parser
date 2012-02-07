@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -
 #
-# This file is part of http-parser released under the MIT license. 
+# This file is part of http-parser released under the MIT license.
 # See the NOTICE for more information.
 
 from libc.stdlib cimport *
@@ -16,11 +16,11 @@ cdef extern from "pyversion_compat.h":
 from cpython cimport PyBytes_FromStringAndSize
 
 cdef extern from "http_parser.h" nogil:
-    
+
     cdef enum http_method:
         HTTP_DELETE, HTTP_GET, HTTP_HEAD, HTTP_POST, HTTP_PUT,
         HTTP_CONNECT, HTTP_OPTIONS, HTTP_TRACE, HTTP_COPY, HTTP_LOCK,
-        HTTP_MKCOL, HTTP_MOVE, HTTP_PROPFIND, HTTP_PROPPATCH, HTTP_UNLOCK, 
+        HTTP_MKCOL, HTTP_MOVE, HTTP_PROPFIND, HTTP_PROPPATCH, HTTP_UNLOCK,
         HTTP_REPORT, HTTP_MKACTIVITY, HTTP_CHECKOUT, HTTP_MERGE, HTTP_MSEARCH,
         HTTP_NOTIFY, HTTP_SUBSCRIBE, HTTP_UNSUBSCRIBE, HTTP_PATCH
 
@@ -39,7 +39,7 @@ cdef extern from "http_parser.h" nogil:
 
     ctypedef int (*http_data_cb) (http_parser*, char *at, size_t length)
     ctypedef int (*http_cb) (http_parser*)
-    
+
     struct http_parser_settings:
         http_cb on_message_begin
         http_data_cb on_url
@@ -49,10 +49,10 @@ cdef extern from "http_parser.h" nogil:
         http_data_cb on_body
         http_cb on_message_complete
 
-    void http_parser_init(http_parser *parser, 
+    void http_parser_init(http_parser *parser,
             http_parser_type ptype)
-    
-    size_t http_parser_execute(http_parser *parser, 
+
+    size_t http_parser_execute(http_parser *parser,
             http_parser_settings *settings, char *data,
             size_t len)
 
@@ -69,22 +69,22 @@ cdef int on_url_cb(http_parser *parser, char *at,
     res.url = value
     return 0
 
-cdef int on_header_field_cb(http_parser *parser, char *at, 
+cdef int on_header_field_cb(http_parser *parser, char *at,
         size_t length):
     header_field = PyBytes_FromStringAndSize(at, length)
     res = <object>parser.data
-  
+
     if res._last_was_value:
         res._last_field = ""
     res._last_field += bytes_to_str(header_field)
     res._last_was_value = False
     return 0
 
-cdef int on_header_value_cb(http_parser *parser, char *at, 
+cdef int on_header_value_cb(http_parser *parser, char *at,
         size_t length):
     res = <object>parser.data
     header_value = bytes_to_str(PyBytes_FromStringAndSize(at, length))
-   
+
     if res._last_field in res.headers:
         header_value = "%s,%s" % (res.headers[res._last_field],
                 header_value)
@@ -112,7 +112,7 @@ cdef int on_headers_complete_cb(http_parser *parser):
             del res.headers['content-encoding']
         else:
             res.decompress = False
-    
+
     return 0
 
 cdef int on_message_begin_cb(http_parser *parser):
@@ -120,7 +120,7 @@ cdef int on_message_begin_cb(http_parser *parser):
     res.message_begin = True
     return 0
 
-cdef int on_body_cb(http_parser *parser, char *at, 
+cdef int on_body_cb(http_parser *parser, char *at,
         size_t length):
     res = <object>parser.data
     value = PyBytes_FromStringAndSize(at, length)
@@ -130,7 +130,6 @@ cdef int on_body_cb(http_parser *parser, char *at,
     # decompress the value if needed
     if res.decompress:
         value = res.decompressobj.decompress(value)
-
     res.body.append(value)
     return 0
 
@@ -147,7 +146,7 @@ class _ParserData(object):
         self.body = []
         self.headers = IOrderedDict()
         self.environ = {}
-        
+
         self.decompress = decompress
         self.decompressobj = None
 
@@ -157,10 +156,10 @@ class _ParserData(object):
         self.partial_body = False
         self.message_begin = False
         self.message_complete = False
-        
+
         self._last_field = ""
         self._last_was_value = False
-        
+
 cdef class HttpParser:
     """ Low level HTTP parser.  """
 
@@ -174,14 +173,14 @@ cdef class HttpParser:
     cdef object _parsed_url
 
     def __init__(self, kind=2, decompress=False):
-        """ constructor of HttpParser object. 
-        
-        
-        :attr kind: Int,  could be 0 to parseonly requests, 
+        """ constructor of HttpParser object.
+
+
+        :attr kind: Int,  could be 0 to parseonly requests,
         1 to parse only responses or 2 if we want to let
-        the parser detect the type. 
+        the parser detect the type.
         """
-        
+
         # set parser type
         if kind == 2:
             parser_type = HTTP_BOTH
@@ -227,7 +226,7 @@ cdef class HttpParser:
         """ get HTTP method as string"""
         return http_method_str(<http_method>self._parser.method)
 
-    
+
 
     def get_status_code(self):
         """ get status code of a response as integer """
@@ -277,7 +276,7 @@ cdef class HttpParser:
             if hkey in environ:
                 environ[key] = environ.pop(hkey)
 
-        script_name = environ.get('HTTP_SCRIPT_NAME', 
+        script_name = environ.get('HTTP_SCRIPT_NAME',
                 os.environ.get("SCRIPT_NAME", ""))
 
         if script_name:
@@ -287,7 +286,7 @@ cdef class HttpParser:
 
         environ.update({
             'REQUEST_METHOD': self.get_method(),
-            'SERVER_PROTOCOL': "HTTP/%s" % ".".join(map(str, 
+            'SERVER_PROTOCOL': "HTTP/%s" % ".".join(map(str,
                 self.get_version())),
             'PATH_INFO': path_info,
             'SCRIPT_NAME': script_name,
@@ -310,7 +309,7 @@ cdef class HttpParser:
         body = b("").join(self._data.body)
         m = min(len(body), l)
         data, rest = body[:m], body[m:]
-        barray[0:m] = data
+        barray[0:m] = bytes(data)
         if not rest:
             self._data.body = []
             self._data.partial_body = False
@@ -324,7 +323,7 @@ cdef class HttpParser:
         return self._parser_upgrade
 
     def is_headers_complete(self):
-        """ return True if all headers have been parsed. """ 
+        """ return True if all headers have been parsed. """
         return self._data.headers_complete
 
     def is_partial_body(self):

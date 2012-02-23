@@ -1,11 +1,11 @@
-restkit (0.6.0-1) karmic; urgency=low
+python-http-parser (0.6.0-1) unstable; urgency=low
 
-  * bump version 
+  * bump version.
 
- -- Benoit Chesneau <benoitc@e-engura.org>  Mon, 20 Jun 201 17:20:00 +0100
+ -- Benoit Chesneau <benoitc@e-engura.org>  Mon, 20 Jun 2011 17:20:00 +0100
 
-restkit (0.5.4-1) karmic; urgency=low
+python-http-parser (0.5.4-1) unstable; urgency=low
 
-  * bump version 
+  * bump version.
 
  -- Benoit Chesneau <benoitc@e-engura.org>  Mon, 20 Jun 2011 15:52:00 +0100

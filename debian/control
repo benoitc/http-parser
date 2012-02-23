@@ -1,4 +1,4 @@
-Source: http-parser
+Source: python-http-parser
 Section: python
 Priority: optional
 Maintainer: Benoit Chesneau <benoitc@e-engura.com>

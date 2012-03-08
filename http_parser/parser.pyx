@@ -64,9 +64,7 @@ cdef extern from "http_parser.h" nogil:
 cdef int on_url_cb(http_parser *parser, char *at,
         size_t length):
     res = <object>parser.data
-    value = bytes_to_str(PyBytes_FromStringAndSize(at, length))
-
-    res.url = value
+    res.url = bytes_to_str(PyBytes_FromStringAndSize(at, length))
     return 0
 
 cdef int on_header_field_cb(http_parser *parser, char *at,
@@ -89,11 +87,7 @@ cdef int on_header_value_cb(http_parser *parser, char *at,
         header_value = "%s, %s" % (res.headers[res._last_field],
                 header_value)
 
-    # update wsgi environ
-    key =  'HTTP_%s' % res._last_field.upper().replace('-','_')
-    res.environ[key] = header_value
-
-    # add to headers
+        # add to headers
     res.headers[res._last_field] = header_value
     res._last_was_value = True
     return 0
@@ -145,7 +139,6 @@ class _ParserData(object):
         self.url = ""
         self.body = []
         self.headers = IOrderedDict()
-        self.environ = {}
 
         self.decompress = decompress
         self.decompressobj = None
@@ -174,9 +167,8 @@ cdef class HttpParser:
 
     def __init__(self, kind=2, decompress=False):
         """ constructor of HttpParser object.
-
-
-        :attr kind: Int,  could be 0 to parseonly requests,
+        :
+        attr kind: Int,  could be 0 to parseonly requests,
         1 to parse only responses or 2 if we want to let
         the parser detect the type.
         """
@@ -268,16 +260,19 @@ cdef class HttpParser:
     def get_wsgi_environ(self):
         """ get WSGI environ based on the current request """
         self.maybe_parse_url()
-        environ = self._data.environ
 
-        # clean special keys
-        for key in ("CONTENT_LENGTH", "CONTENT_TYPE", "SCRIPT_NAME"):
-            hkey = "HTTP_%s" % key
-            if hkey in environ:
-                environ[key] = environ.pop(hkey)
-
-        script_name = environ.get('HTTP_SCRIPT_NAME',
-                os.environ.get("SCRIPT_NAME", ""))
+        environ = dict()
+        script_name = os.environ.get("SCRIPT_NAME", "")
+        for key, val in self._data.headers.items():
+            ku = key.upper()
+            if key == "CONTENT-TYPE":
+                environ['CONTENT_TYPE'] = val
+            elif key == "CONTENT-LENGTH":
+                environ['CONTENT_LENGTH'] = val
+            elif key == "SCRIPT_NAME":
+                environ['SCRIPT_NAME'] = val
+            else:
+                environ['HTTP_%s' % ku.replace('-','_')] = val
 
         if script_name:
             path_info = self._path.split(script_name, 1)[1]

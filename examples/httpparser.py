@@ -16,7 +16,7 @@ def main():
     try:
         s.connect(('gunicorn.org', 80))
         s.send(b("GET / HTTP/1.1\r\nHost: gunicorn.org\r\n\r\n"))
-        
+
         while True:
             data = s.recv(1024)
             if not data:
@@ -37,8 +37,9 @@ def main():
             if p.is_message_complete():
                 break
 
+
         print(b("").join(body))
-    
+
     finally:
         s.close()
 

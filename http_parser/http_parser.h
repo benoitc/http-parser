@@ -65,7 +65,6 @@ typedef int ssize_t;
 
 typedef struct http_parser http_parser;
 typedef struct http_parser_settings http_parser_settings;
-typedef struct http_parser_result http_parser_result;
 
 
 /* Callbacks should return non-zero to indicate an error. The parser will
@@ -86,36 +85,43 @@ typedef int (*http_cb) (http_parser*);
 
 
 /* Request Methods */
+#define HTTP_METHOD_MAP(XX) \
+  XX(0, DELETE) \
+  XX(1, GET) \
+  XX(2, HEAD) \
+  XX(3, POST) \
+  XX(4, PUT) \
+  /* pathological */ \
+  XX(5, CONNECT) \
+  XX(6, OPTIONS) \
+  XX(7, TRACE) \
+  /* webdav */ \
+  XX(8, COPY) \
+  XX(9, LOCK) \
+  XX(10, MKCOL) \
+  XX(11, MOVE) \
+  XX(12, PROPFIND) \
+  XX(13, PROPPATCH) \
+  XX(14, UNLOCK) \
+  /* subversion */ \
+  XX(15, REPORT) \
+  XX(16, MKACTIVITY) \
+  XX(17, CHECKOUT) \
+  XX(18, MERGE) \
+  /* upnp */ \
+  XX(19, MSEARCH) \
+  XX(20, NOTIFY) \
+  XX(21, SUBSCRIBE) \
+  XX(22, UNSUBSCRIBE) \
+  /* RFC-5789 */ \
+  XX(23, PATCH) \
+  XX(24, PURGE) \
+
 enum http_method
-  { HTTP_DELETE    = 0
-  , HTTP_GET
-  , HTTP_HEAD
-  , HTTP_POST
-  , HTTP_PUT
-  /* pathological */
-  , HTTP_CONNECT
-  , HTTP_OPTIONS
-  , HTTP_TRACE
-  /* webdav */
-  , HTTP_COPY
-  , HTTP_LOCK
-  , HTTP_MKCOL
-  , HTTP_MOVE
-  , HTTP_PROPFIND
-  , HTTP_PROPPATCH
-  , HTTP_UNLOCK
-  /* subversion */
-  , HTTP_REPORT
-  , HTTP_MKACTIVITY
-  , HTTP_CHECKOUT
-  , HTTP_MERGE
-  /* upnp */
-  , HTTP_MSEARCH
-  , HTTP_NOTIFY
-  , HTTP_SUBSCRIBE
-  , HTTP_UNSUBSCRIBE
-  /* RFC-5789 */
-  , HTTP_PATCH
+  {
+#define XX(num, name) HTTP_##name = num,
+  HTTP_METHOD_MAP(XX)
+#undef X
   };
 
 
@@ -143,10 +149,7 @@ enum flags
                                                                      \
   /* Callback-related errors */                                      \
   XX(CB_message_begin, "the on_message_begin callback failed")       \
-  XX(CB_path, "the on_path callback failed")                         \
-  XX(CB_query_string, "the on_query_string callback failed")         \
   XX(CB_url, "the on_url callback failed")                           \
-  XX(CB_fragment, "the on_fragment callback failed")                 \
   XX(CB_header_field, "the on_header_field callback failed")         \
   XX(CB_header_value, "the on_header_value callback failed")         \
   XX(CB_headers_complete, "the on_headers_complete callback failed") \
@@ -209,7 +212,7 @@ struct http_parser {
   unsigned char index;        /* index into current matcher */
 
   uint32_t nread;          /* # bytes read in various scenarios */
-  int64_t content_length;  /* # bytes in body (0 if no Content-Length header) */
+  uint64_t content_length; /* # bytes in body (0 if no Content-Length header) */
 
   /** READ-ONLY **/
   unsigned short http_major;

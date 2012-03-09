@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -
 #
-# This file is part of http-parser released under the MIT license. 
+# This file is part of http-parser released under the MIT license.
 # See the NOTICE for more information.
 
 
@@ -72,7 +72,7 @@ class IOrderedDict(dict, DictMixin):
         self.__map = {}                 # key --> [key, prev, next]
         self.__lower = {}               # key -> key.lower()
         dict.clear(self)
-        
+
     def __setitem__(self, key, value):
         if key not in self:
             end = self.__end
@@ -176,7 +176,7 @@ class IOrderedDict(dict, DictMixin):
 
 
 class IOBase(object):
-    
+
     ### Flush and close ###
 
     def seek(self, pos, whence=0):
@@ -247,7 +247,7 @@ class IOBase(object):
         """Context management protocol.  Calls close()"""
         self.close()
 
-    
+
     def readable(self):
         """Return whether object was opened for reading.
 
@@ -718,7 +718,7 @@ class TextIOWrapper(IOBase):
         self._snapshot = None  # info for reconstructing decoder state
         self._seekable = self._telling = self.buffer.seekable()
 
-        
+
     @property
     def encoding(self):
         return self._encoding

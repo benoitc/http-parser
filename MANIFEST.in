@@ -3,5 +3,6 @@ include LICENSE
 include NOTICE
 include README.rst
 include THANKS
+include Makefile.ext
 recursive-include http_parser *
 recursive-include examples *

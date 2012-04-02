@@ -10,6 +10,7 @@ setuptools-*
 .svn/*
 .DS_Store
 *.so
+http_parser/parser.so
 http_parser.egg-info
 nohup.out
 .coverage

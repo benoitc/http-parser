@@ -13,18 +13,7 @@ try:
 except ImportError:
     from StringIO import StringIO
 
-try:
-    from io import DEFAULT_BUFFER_SIZE, RawIOBase
-except ImportError:
-    from http_parser.py25 import DEFAULT_BUFFER_SIZE, RawIOBase
-
-try:
-    bytes
-    bytearray
-except (NameError, AttributeError):
-    # python < 2.6
-    from py25 import bytes, bytearray
-
+from io import DEFAULT_BUFFER_SIZE, RawIOBase
 
 _blocking_errnos = ( EAGAIN, EWOULDBLOCK )
 
@@ -39,7 +28,7 @@ if sys.version_info < (2, 7, 0, 'final'):
                 recved = len(buf)
                 b[0:recved] = buf
                 return recved
-            except socket.error, e:
+            except socket.error as e:
                 n = e.args[0]
                 if n == EINTR:
                     continue
@@ -173,7 +162,7 @@ class SocketReader(RawIOBase):
             while True:
                 try:
                     return self._sock.recv_into(b)
-                except socket.error, e:
+                except socket.error as e:
                     n = e.args[0]
                     if n == EINTR:
                         continue

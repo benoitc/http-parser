@@ -3,18 +3,7 @@
 # This file is part of http-parser released under the MIT license.
 # See the NOTICE for more information.
 
-try:
-    from io import DEFAULT_BUFFER_SIZE, BufferedReader, TextIOWrapper
-except ImportError:
-    from py25 import DEFAULT_BUFFER_SIZE, BufferedReader, TextIOWrapper
-
-
-try:
-    bytes
-    bytearray
-except (NameError, AttributeError):
-    # python < 2.6
-    from py25 import bytes, bytearray
+from io import DEFAULT_BUFFER_SIZE, BufferedReader, TextIOWrapper
 
 try:
     from http_parser.parser import HttpParser

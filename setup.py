@@ -17,7 +17,7 @@ import traceback
 from setuptools import setup, find_packages, Extension, Feature
 
 if not hasattr(sys, 'version_info') or \
-        sys.version_info < (2, 5, 0, 'final'):
+        sys.version_info < (2, 6, 0, 'final'):
     raise SystemExit("http-parser requires Python 2.6x or later")
 
 http_parser = load_source("http_parser", os.path.join("http_parser",

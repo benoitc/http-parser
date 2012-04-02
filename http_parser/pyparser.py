@@ -218,7 +218,7 @@ class HttpParser(object):
                     if not ret:
                         return length
                     nb_parsed = nb_parsed + (len(to_parse) - ret)
-                except InvalidHeader, e:
+                except InvalidHeader as e:
                     self.errno = INVALID_HEADER
                     self.errstr = str(e)
                     return nb_parsed
@@ -256,7 +256,7 @@ class HttpParser(object):
                 self._parse_response_line(line)
             elif self.kind == 0:
                 self._parse_request_line(line)
-        except InvalidRequestLine, e:
+        except InvalidRequestLine as e:
             self.errno = BAD_FIRST_LINE
             self.errstr = str(e)
             return False
@@ -398,7 +398,7 @@ class HttpParser(object):
             try:
 
                 size, rest = self._parse_chunk_size(data)
-            except InvalidChunkSize, e:
+            except InvalidChunkSize as e:
                 self.errno = INVALID_CHUNK
                 self.errstr = "invalid chunk size [%s]" % str(e)
                 return -1

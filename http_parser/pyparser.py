@@ -306,12 +306,13 @@ class HttpParser(object):
         self._version = (int(match.group(1)), int(match.group(2)))
 
         # update environ
-        self.environ.update({
-            "PATH_INFO": self._path,
-            "QUERY_STRING": self._query_string,
-            "RAW_URI": self._url,
-            "REQUEST_METHOD": self._method,
-            "SERVER_PROTOCOL": bits[2]})
+        if hasattr(self,'environ'):
+	    self.environ.update({
+                "PATH_INFO": self._path,
+                "QUERY_STRING": self._query_string,
+                "RAW_URI": self._url,
+                "REQUEST_METHOD": self._method,
+                "SERVER_PROTOCOL": bits[2]})
 
     def _parse_headers(self, data):
         idx = data.find(b("\r\n\r\n"))

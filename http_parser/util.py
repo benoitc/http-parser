@@ -189,7 +189,7 @@ class IOrderedDict(dict, MutableMapping):
         while comparison to a regular mapping is order-insensitive.
 
         '''
-        if isinstance(other, OrderedDict):
+        if isinstance(other, IOrderedDict):
             return len(self)==len(other) and \
                    all(imap(_eq, self.iteritems(), other.iteritems()))
         return dict.__eq__(self, other)

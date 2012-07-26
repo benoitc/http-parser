@@ -4,7 +4,8 @@
 # See the NOTICE for more information.
 
 from __future__ import with_statement
-from distutils.errors import CCompilerError, DistutilsExecError
+from distutils.errors import CCompilerError, DistutilsExecError, \
+    DistutilsPlatformError
 from distutils.command.build_ext import build_ext
 from distutils.command.sdist import sdist as _sdist
 import glob
@@ -19,6 +20,12 @@ from setuptools import setup, find_packages, Extension, Feature
 if not hasattr(sys, 'version_info') or \
         sys.version_info < (2, 6, 0, 'final'):
     raise SystemExit("http-parser requires Python 2.6x or later")
+
+ext_errors = (CCompilerError, DistutilsExecError, DistutilsPlatformError)
+if sys.platform == 'win32' and sys.version_info > (2, 6):
+   # 2.6's distutils.msvc9compiler can raise an IOError when failing to
+   # find the compiler
+   ext_errors += (IOError,)
 
 http_parser = load_source("http_parser", os.path.join("http_parser",
         "__init__.py"))
@@ -70,6 +77,9 @@ class sdist(_sdist):
             if renamed:
                 os.rename('Makefile.ext', 'Makefile')
 
+class BuildFailed(Exception):
+    pass
+
 class my_build_ext(build_ext):
 
     def build_extension(self, ext):
@@ -91,9 +101,9 @@ class my_build_ext(build_ext):
             filename = os.path.split(filename)[-1]
             if not self.inplace:
                 filename = os.path.join(*modpath[:-1] + [filename])
-                path_to_build_core_so = abspath(os.path.join(self.build_lib,
+                path_to_build_core_so = os.path.abspath(os.path.join(self.build_lib,
                     filename))
-                path_to_core_so = abspath(join('http_parser',
+                path_to_core_so = os.path.abspath(os.path.join('http_parser',
                     os.path.basename(path_to_build_core_so)))
                 if path_to_build_core_so != path_to_core_so:
                     try:
@@ -119,7 +129,6 @@ def run_setup(with_binary):
         extra.update(dict(
             ext_modules = [
                 Extension('http_parser.parser', [
-                    os.path.join('http_parser', 'parser.pyx'),
                     os.path.join('http_parser', 'http_parser.c')
                 ], ['http_parser'])],
             cmdclass=dict(build_ext=my_build_ext, sdist=sdist)

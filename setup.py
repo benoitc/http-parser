@@ -129,8 +129,9 @@ def run_setup(with_binary):
         extra.update(dict(
             ext_modules = [
                 Extension('http_parser.parser', [
-                    os.path.join('http_parser', 'http_parser.c')
-                ], ['http_parser'])],
+                    os.path.join('http_parser', 'http_parser.c'),
+                    os.path.join('http_parser', 'parser.c')
+                ], ['parser'])],
             cmdclass=dict(build_ext=my_build_ext, sdist=sdist)
         ))
 

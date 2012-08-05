@@ -5,7 +5,11 @@
 
 from libc.stdlib cimport *
 import os
-import urlparse
+try:
+    from urllib.parse import urlsplit
+except ImportError:
+    from urlparse import urlsplit
+
 import zlib
 
 from http_parser.util import b, bytes_to_str, IOrderedDict, unquote
@@ -234,7 +238,7 @@ cdef class HttpParser:
     def maybe_parse_url(self):
         raw_url = self.get_url()
         if not self._parsed_url and raw_url:
-            self._parsed_url = urlparse.urlsplit(raw_url)
+            self._parsed_url = urlsplit(raw_url)
             self._path =  self._parsed_url.path or ""
             self._query_string = self._parsed_url.query or ""
             self._fragment = self._parsed_url.fragment or ""

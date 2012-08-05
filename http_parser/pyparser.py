@@ -9,7 +9,8 @@ import sys
 import urlparse
 import zlib
 
-from http_parser.util import b, bytes_to_str, IOrderedDict, StringIO, unquote
+from http_parser.util import (b, bytes_to_str, IOrderedDict, StringIO,
+        unquote, MAXSIZE)
 
 
 METHOD_RE = re.compile("[A-Z0-9$-_.]{3,20}")
@@ -307,7 +308,7 @@ class HttpParser(object):
 
         # update environ
         if hasattr(self,'environ'):
-	    self.environ.update({
+            self.environ.update({
                 "PATH_INFO": self._path,
                 "QUERY_STRING": self._query_string,
                 "RAW_URI": self._url,
@@ -364,7 +365,7 @@ class HttpParser(object):
         else:
             self._chunked = (te == 'chunked')
             if not self._chunked:
-                self._clen_rest = sys.maxint
+                self._clen_rest = MAXSIZE
 
         # detect encoding and set decompress object
         encoding = self._headers.get('content-encoding')

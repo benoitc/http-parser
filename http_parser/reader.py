@@ -5,15 +5,13 @@
 # See the NOTICE for more information.
 
 from errno import EINTR, EAGAIN, EWOULDBLOCK
+from io import DEFAULT_BUFFER_SIZE, RawIOBase
 import socket
 import sys
 import types
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
 
-from io import DEFAULT_BUFFER_SIZE, RawIOBase
+from http_parser.util import StringIO
+
 
 _blocking_errnos = ( EAGAIN, EWOULDBLOCK )
 

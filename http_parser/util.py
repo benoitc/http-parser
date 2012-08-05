@@ -6,7 +6,6 @@
 
 import sys
 from collections import MutableMapping
-from itertools import imap
 
 if sys.version_info[0] == 3:
     from urllib.parse import unquote
@@ -16,8 +15,12 @@ if sys.version_info[0] == 3:
     def bytes_to_str(b):
         return str(b, 'latin1')
 
+    string_types = str,
+
     import io
     StringIO = io.StringIO
+
+    MAXSIZE = sys.maxsize
 
 else:
     from urllib import unquote
@@ -27,12 +30,28 @@ else:
     def bytes_to_str(s):
         return s
 
+    string_types = basestring,
+
     try:
         import cStringIO
         StringIO = BytesIO = cStringIO.StringIO
     except ImportError:
         import StringIO
         StringIO = BytesIO = StringIO.StringIO
+
+    # It's possible to have sizeof(long) != sizeof(Py_ssize_t).
+    class X(object):
+        def __len__(self):
+            return 1 << 31
+    try:
+        len(X())
+    except OverflowError:
+        # 32-bit
+        MAXSIZE = int((1 << 31) - 1)
+    else:
+        # 64-bit
+        MAXSIZE = int((1 << 63) - 1)
+    del X
 
 class IOrderedDict(dict, MutableMapping):
     'Dictionary that remembers insertion order with insensitive key'
@@ -131,7 +150,7 @@ class IOrderedDict(dict, MutableMapping):
     def clear(self):
         'od.clear() -> None.  Remove all items from od.'
         try:
-            for node in self.__map.itervalues():
+            for node in self.__map.values():
                 del node[:]
             self.__root[:] = [self.__root, self.__root, None]
             self.__map.clear()
@@ -167,7 +186,7 @@ class IOrderedDict(dict, MutableMapping):
         'od.__repr__() <==> repr(od)'
         if not self:
             return '%s()' % (self.__class__.__name__,)
-        return '%s(%r)' % (self.__class__.__name__, self.items())
+        return '%s(%r)' % (self.__class__.__name__, list(self.items()))
 
     def copy(self):
         'od.copy() -> a shallow copy of od'
@@ -191,7 +210,7 @@ class IOrderedDict(dict, MutableMapping):
         '''
         if isinstance(other, IOrderedDict):
             return len(self)==len(other) and \
-                   all(imap(_eq, self.iteritems(), other.iteritems()))
+                   all(map(_eq, iter(self.items()), iter(other.items())))
         return dict.__eq__(self, other)
 
     def __del__(self):

@@ -52,7 +52,7 @@ class HttpStream(object):
 
         while True:
             try:
-                data = self.next()
+                next(self)
             except StopIteration:
                 if self.parser.is_headers_complete():
                     return
@@ -66,11 +66,10 @@ class HttpStream(object):
         if self.parser.is_headers_complete():
             return True
 
-        data = ""
         if not cond():
             while True:
                 try:
-                    data += self.next()
+                    next(self)
                 except StopIteration:
                     if self.parser.is_headers_complete():
                         return True
@@ -182,7 +181,7 @@ class HttpStream(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         if self.parser.is_message_complete():
             raise StopIteration
 
@@ -204,3 +203,5 @@ class HttpStream(object):
             raise StopIteration
 
         return to_parse
+
+    next = __next__

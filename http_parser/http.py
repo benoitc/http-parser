@@ -11,7 +11,7 @@ except ImportError:
     from http_parser.pyparser import HttpParser
 
 from http_parser.reader import HttpBodyReader
-from http_parser.util import status_reasons
+from http_parser.util import status_reasons, bytes_to_str
 
 HTTP_BOTH = 2
 HTTP_RESPONSE = 1
@@ -66,14 +66,16 @@ class HttpStream(object):
         if self.parser.is_headers_complete():
             return True
 
+        data = []
         if not cond():
             while True:
                 try:
-                    next(self)
+                    d = next(self)
+                    data.append(d)
                 except StopIteration:
                     if self.parser.is_headers_complete():
                         return True
-                    raise BadStatusLine(data)
+                    raise BadStatusLine(b"".join(data))
                 if cond():
                     return True
         return True
@@ -196,8 +198,8 @@ class HttpStream(object):
         # parse data
         nparsed = self.parser.execute(to_parse, recved)
         if nparsed != recved and not self.parser.is_message_complete():
-            raise ParserError("nparsed != recved (%s != %s)" % (nparsed,
-                recved))
+            raise ParserError("nparsed != recved (%s != %s) [%s]" % (nparsed,
+                recved, bytes_to_str(to_parse)))
 
         if recved == 0:
             raise StopIteration

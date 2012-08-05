@@ -73,8 +73,8 @@ class HttpBodyReader(RawIOBase):
 
         if not self.http_stream.parser.is_partial_body():
             self.eof = True
-            b = bytes('')
-            return len(b)
+            b = b''
+            return len(b'')
 
         return self.http_stream.parser.recv_body_into(b)
 

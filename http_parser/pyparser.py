@@ -6,8 +6,12 @@
 import os
 import re
 import sys
-import urlparse
 import zlib
+
+if sys.version_info >= (3,):
+    import urllib.parse as urlparse
+else:
+    import urlparse
 
 from http_parser.headers import HeaderDict
 from http_parser.util import b, bytes_to_str, StringIO, unquote, MAXSIZE

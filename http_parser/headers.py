@@ -1,5 +1,7 @@
 import collections
 
+from http_parser.util import string_types
+
 
 class HeaderDict(object):
     """
@@ -48,7 +50,7 @@ class HeaderDict(object):
         self.__items.append((key, value))
     
     def _validate_value(self, value):
-        if isinstance(value, basestring):
+        if isinstance(value, string_types):
             if "\n" in value or "\r" in value:
                 raise ValueError("Detected newline in header value. This is "
                     "a potential security problem.")

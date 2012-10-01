@@ -105,7 +105,7 @@ class HttpParser(object):
             if hkey in environ:
                 environ[key] = environ.pop(hkey)
 
-        script_name = environ.get('HTTP_SCRIPT_NAME',
+        script_name = environ.get('SCRIPT_NAME',
                 os.environ.get("SCRIPT_NAME", ""))
         if script_name:
             path_info = self._path.split(script_name, 1)[1]

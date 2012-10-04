@@ -313,7 +313,7 @@ class HttpParser(object):
 
         # update environ
         if hasattr(self,'environ'):
-            self.environ.update({
+            self._environ.update({
                 "PATH_INFO": self._path,
                 "QUERY_STRING": self._query_string,
                 "RAW_URI": self._url,

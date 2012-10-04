@@ -99,7 +99,7 @@ class HttpParser(object):
     def get_headers(self):
         return self._headers
 
-    def get_environ(self):
+    def get_wsgi_environ(self):
         if not self.__on_headers_complete:
             return None
 

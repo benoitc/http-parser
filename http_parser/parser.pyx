@@ -12,7 +12,8 @@ except ImportError:
 
 import zlib
 
-from http_parser.util import b, bytes_to_str, IOrderedDict, unquote
+from http_parser.headers import HeaderDict
+from http_parser.util import b, bytes_to_str, unquote
 
 cdef extern from "pyversion_compat.h":
     pass
@@ -89,13 +90,7 @@ cdef int on_header_value_cb(http_parser *parser, char *at,
         size_t length):
     res = <object>parser.data
     header_value = bytes_to_str(PyBytes_FromStringAndSize(at, length))
-
-    if res._last_field in res.headers:
-        header_value = "%s, %s" % (res.headers[res._last_field],
-                header_value)
-
-        # add to headers
-    res.headers[res._last_field] = header_value
+    res.headers.add(res._last_field, header_value)
     res._last_was_value = True
     return 0
 
@@ -145,7 +140,7 @@ class _ParserData(object):
     def __init__(self, decompress=False):
         self.url = ""
         self.body = []
-        self.headers = IOrderedDict()
+        self.headers = HeaderDict()
 
         self.decompress = decompress
         self.decompressobj = None

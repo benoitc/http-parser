@@ -6,11 +6,15 @@
 import os
 import re
 import sys
-import urlparse
 import zlib
 
-from http_parser.util import (b, bytes_to_str, IOrderedDict, StringIO,
-        unquote, MAXSIZE)
+if sys.version_info >= (3,):
+    import urllib.parse as urlparse
+else:
+    import urlparse
+
+from http_parser.headers import HeaderDict
+from http_parser.util import b, bytes_to_str, StringIO, unquote, MAXSIZE
 
 
 METHOD_RE = re.compile("[A-Z0-9$-_.]{3,20}")
@@ -53,7 +57,7 @@ class HttpParser(object):
         self._path = None
         self._query_string = None
         self._fragment= None
-        self._headers = IOrderedDict()
+        self._headers = HeaderDict()
         self._environ = dict()
         self._chunked = False
         self._body = []
@@ -342,12 +346,8 @@ class HttpParser(object):
                 value.append(lines.pop(0))
             value = ''.join(value).rstrip()
 
-            # multiple headers
-            if name in self._headers:
-                value = "%s, %s" % (self._headers[name], value)
-
             # store new header value
-            self._headers[name] = value
+            self._headers.add(name, value)
 
             # update WSGI environ
             key =  'HTTP_%s' % name.upper().replace('-','_')

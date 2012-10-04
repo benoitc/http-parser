@@ -272,11 +272,11 @@ cdef class HttpParser:
         script_name = os.environ.get("SCRIPT_NAME", "")
         for key, val in self._data.headers.items():
             ku = key.upper()
-            if key == "CONTENT-TYPE":
+            if ku == "CONTENT-TYPE":
                 environ['CONTENT_TYPE'] = val
-            elif key == "CONTENT-LENGTH":
+            elif ku == "CONTENT-LENGTH":
                 environ['CONTENT_LENGTH'] = val
-            elif key == "SCRIPT_NAME":
+            elif ku == "SCRIPT_NAME":
                 environ['SCRIPT_NAME'] = val
             else:
                 environ['HTTP_%s' % ku.replace('-','_')] = val

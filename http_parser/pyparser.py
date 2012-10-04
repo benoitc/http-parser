@@ -6,7 +6,12 @@
 import os
 import re
 import sys
-import urlparse
+
+if sys.version_info >= (3,):
+    import urllib.parse as urlparse
+else:
+    import urlparse
+
 import zlib
 
 from http_parser.util import (b, bytes_to_str, IOrderedDict, StringIO,

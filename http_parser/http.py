@@ -189,9 +189,11 @@ class HttpStream(object):
 
         # fetch data
         b = bytearray(DEFAULT_BUFFER_SIZE)
-        recved = self.stream.readinto(b)
-        if recved is None:
-            raise NoMoreData("no more data")
+        recved = None
+        
+        # work around bad api choice of python3
+        while recved is None:
+            recved = self.stream.readinto(b)
 
         del b[recved:]
         to_parse = bytes(b)

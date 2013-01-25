@@ -190,8 +190,12 @@ class HttpStream(object):
         # fetch data
         b = bytearray(DEFAULT_BUFFER_SIZE)
         recved = None
-        
         # work around bad api choice of python3
+        # according to #pep3116 blocking errors
+        # on async streams return None
+        # this also happens for socket timeouts
+        # on sync streams
+
         while recved is None:
             recved = self.stream.readinto(b)
 

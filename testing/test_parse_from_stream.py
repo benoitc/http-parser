@@ -17,13 +17,11 @@ class FakeInputSocket(object):
         except IndexError:
             return b''
         else:
-            if isinstance(event, type(b'')):
-                return event
-            elif isinstance(event, int):
-                raise socket.error(event, os.strerror(event))
+            if isinstance(event, Exception):
+                raise event
             else:
-                assert 0
-    
+                return event
+
     def recv_into(self, buf):
         data = self.recv()
         l = len(data)
@@ -32,16 +30,16 @@ class FakeInputSocket(object):
         return l
 
 
-
+complete_request = b'GET /test HTTP/1.1\r\nContent-Type: text\r\n\r\n'
 
 inputs = {
     '01_complete': [
-        b'GET /test HTTP/1.1\r\nContent-Type: text\r\n\r\n',
+        complete_request
     ],
 
     '02_eagain_before_headers': [
-        b'GET /test HTTP/1.1\r\n', 
-        EAGAIN,
+        b'GET /test HTTP/1.1\r\n',
+        socket.error(EAGAIN, 'eagain'),
         b'Content-Type: text\r\n\r\n',
     ],
 
@@ -57,3 +55,21 @@ def test_parse_headers(input):
     assert stream.headers()
 
 
+def test_parse_with_timeout_raises():
+    sock = FakeInputSocket([
+        b'GET /test HTTP/1.1\r\n',
+        socket.timeout(EAGAIN, 'timeout'),
+        b'Content-Type: text\r\n\r\n',
+    ])
+    reader = SocketReader(sock)
+    stream = HttpStream(reader)
+    ex = pytest.raises(socket.timeout, stream.headers)
+    print(ex.getrepr(style='short'))
+
+
+def test_parse_from_real_socket():
+    sock, sink = socket.socketpair()
+    sink.send(complete_request)
+    reader = SocketReader(sock)
+    stream = HttpStream(reader)
+    assert stream.headers()

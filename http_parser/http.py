@@ -189,15 +189,12 @@ class HttpStream(object):
 
         # fetch data
         b = bytearray(DEFAULT_BUFFER_SIZE)
-        recved = None
-        # work around bad api choice of python3
-        # according to #pep3116 blocking errors
-        # on async streams return None
-        # this also happens for socket timeouts
-        # on sync streams
 
-        while recved is None:
-            recved = self.stream.readinto(b)
+        # if a nonblocking socket is used
+        # then pep 3116 demands read/readinto to return 0
+        recved = self.stream.readinto(b)
+        if recved is None:
+            raise IOError('nonblocking socket used in blocking code')
 
         del b[recved:]
         to_parse = bytes(b)

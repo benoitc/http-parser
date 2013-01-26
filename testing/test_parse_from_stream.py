@@ -32,42 +32,38 @@ class FakeInputSocket(object):
 
 complete_request = b'GET /test HTTP/1.1\r\nContent-Type: text\r\n\r\n'
 
-inputs = {
-    '01_complete': [
-        complete_request
-    ],
-
-    '02_eagain_before_headers': [
-        b'GET /test HTTP/1.1\r\n',
-        socket.error(EAGAIN, 'eagain'),
-        b'Content-Type: text\r\n\r\n',
-    ],
-
-
-}
-
-
-@pytest.mark.parametrize('input', sorted(inputs))
-def test_parse_headers(input):
-    sock = FakeInputSocket(inputs[input])
+def tostream(input):
+    sock = FakeInputSocket(input)
     reader = SocketReader(sock)
-    stream = HttpStream(reader)
+    return HttpStream(reader)
+
+
+def test_parse_headers():
+    stream = tostream([complete_request])
     assert stream.headers()
 
 
+def test_ioerror_on_noblocking():
+    stream = tostream([
+        b'GET /test HTTP/1.1\r\n',
+        socket.error(EAGAIN, 'eagain'),
+        b'Content-Type: text\r\n\r\n',
+    ])
+    pytest.raises(IOError, stream.headers)
+
+
 def test_parse_with_timeout_raises():
-    sock = FakeInputSocket([
+    stream = tostream([
         b'GET /test HTTP/1.1\r\n',
         socket.timeout(EAGAIN, 'timeout'),
         b'Content-Type: text\r\n\r\n',
     ])
-    reader = SocketReader(sock)
-    stream = HttpStream(reader)
     ex = pytest.raises(socket.timeout, stream.headers)
     print(ex.getrepr(style='short'))
 
 
 def test_parse_from_real_socket():
+    # would fail on python2.6 before the recv_into hack
     sock, sink = socket.socketpair()
     sink.send(complete_request)
     reader = SocketReader(sock)

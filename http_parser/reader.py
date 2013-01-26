@@ -4,36 +4,10 @@
 
 # See the NOTICE for more information.
 
-from errno import EINTR, EAGAIN, EWOULDBLOCK
 from io import DEFAULT_BUFFER_SIZE, RawIOBase
-import socket
-import sys
-import types
 
 from http_parser.util import StringIO
 
-_blocking_errnos = ( EAGAIN, EWOULDBLOCK )
-
-if sys.version_info < (2, 7, 0, 'final'):
-    # in python 2.6 socket.recv_into doesn't support bytesarray
-    import array
-    def _readinto(sock, b):
-        l = max(len(b), DEFAULT_BUFFER_SIZE)
-        while True:
-            try:
-                buf = sock.recv(l)
-                recved = len(buf)
-                b[0:recved] = buf
-                return recved
-            except socket.error as e:
-                n = e.args[0]
-                if n == EINTR:
-                    continue
-                if n in _blocking_errnos:
-                    return None
-                raise
-else:
-    _readinto = None
 
 class HttpBodyReader(RawIOBase):
     """ Raw implementation to stream http body """
@@ -128,66 +102,8 @@ class StringReader(IterReader):
             iterable = string
         IterReader.__init__(self, iterable)
 
+from http_parser._socketio import SocketIO
 
-if sys.version_info[0] == 3:
-    from socket import SocketIO
-    class SocketReader(SocketIO):
-
-        def __init__(self, sock):
-            SocketIO.__init__(self, sock, mode="rb")
-else:
-    class SocketReader(RawIOBase):
-        """ a raw reader for sockets or socket like interface. based
-        on SocketIO object from python3.2 """
-
-        def __init__(self, sock):
-            RawIOBase.__init__(self)
-            self._sock = sock
-
-        if _readinto is not None:
-            def readinto(self, b):
-                try:
-                    self._checkClosed()
-                except AttributeError:
-                    pass
-                self._checkReadable()
-                return _readinto(self._sock, b)
-
-        else:
-            def readinto(self, b):
-                try:
-                    self._checkClosed()
-                except AttributeError:
-                    pass
-                self._checkReadable()
-
-                while True:
-                    try:
-                        return self._sock.recv_into(b)
-                    except socket.error as e:
-                        n = e.args[0]
-                        if n == EINTR:
-                            continue
-                        if n in _blocking_errnos:
-                            return None
-                        raise
-
-        def readable(self):
-            """True if the SocketIO is open for reading.
-            """
-            return not self.closed
-
-        def fileno(self):
-            """Return the file descriptor of the underlying socket.
-            """
-            self._checkClosed()
-            return self._sock.fileno()
-
-        def close(self):
-            """Close the SocketIO object. This doesn't close the underlying
-            socket, except if all references to it have disappeared.
-            """
-            if self.closed:
-                return
-            RawIOBase.close(self)
-            self._sock = None
+class SocketReader(SocketIO):
+    def __init__(self, sock):
+        super(SocketReader, self).__init__(sock, mode='rb')

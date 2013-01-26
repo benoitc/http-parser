@@ -189,9 +189,12 @@ class HttpStream(object):
 
         # fetch data
         b = bytearray(DEFAULT_BUFFER_SIZE)
+
+        # if a nonblocking socket is used
+        # then pep 3116 demands read/readinto to return 0
         recved = self.stream.readinto(b)
         if recved is None:
-            raise NoMoreData("no more data")
+            raise IOError('nonblocking socket used in blocking code')
 
         del b[recved:]
         to_parse = bytes(b)

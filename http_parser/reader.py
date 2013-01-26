@@ -4,38 +4,10 @@
 
 # See the NOTICE for more information.
 
-from errno import EINTR, EAGAIN, EWOULDBLOCK
 from io import DEFAULT_BUFFER_SIZE, RawIOBase
-import socket
-import sys
-import types
 
 from http_parser.util import StringIO
 
-_blocking_errnos = ( EAGAIN, EWOULDBLOCK )
-
-if sys.version_info < (2, 7, 0, 'final'):
-    # in python 2.6 socket.recv_into doesn't support bytesarray
-    import array
-    def _readinto(sock, b):
-        l = max(len(b), DEFAULT_BUFFER_SIZE)
-        while True:
-            try:
-                buf = sock.recv(l)
-                recved = len(buf)
-                b[0:recved] = buf
-                return recved
-            except socket.timeout:
-                raise
-            except socket.error as e:
-                n = e.args[0]
-                if n == EINTR:
-                    continue
-                if n in _blocking_errnos:
-                    return None
-                raise
-else:
-    _readinto = None
 
 class HttpBodyReader(RawIOBase):
     """ Raw implementation to stream http body """

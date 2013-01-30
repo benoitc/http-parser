@@ -9,6 +9,8 @@ dist
 setuptools-*
 .svn/*
 .DS_Store
+.cache/*
+.tox/*
 *.so
 http_parser/parser.so
 http_parser.egg-info
@@ -16,3 +18,4 @@ nohup.out
 .coverage
 doc/.sass-cache
 http_parser/__pycache__
+MANIFEST

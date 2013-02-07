@@ -10,6 +10,7 @@ from distutils.command.build_ext import build_ext
 from distutils.command.sdist import sdist as _sdist
 import glob
 from imp import load_source
+import io
 import os
 import shutil
 import sys
@@ -49,7 +50,7 @@ CLASSIFIERS = [
 VERSION = http_parser.__version__
 
 # get long description
-with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as f:
+with io.open(os.path.join(os.path.dirname(__file__), 'README.rst'), encoding='utf8') as f:
     LONG_DESCRIPTION = f.read()
 
 def _system(cmd):

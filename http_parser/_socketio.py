@@ -131,3 +131,10 @@ class SocketIO(io.RawIOBase):
         io.RawIOBase.close(self)
         self._sock._decref_socketios()
         self._sock = None
+
+    def _checkClosed(self, msg=None):
+        """Internal: raise an ValueError if file is closed
+        """
+        if self.closed:
+            raise ValueError("I/O operation on closed file."
+                             if msg is None else msg)

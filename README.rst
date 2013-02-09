@@ -9,6 +9,11 @@ http-parser is under the MIT license.
 
 Project url: https://github.com/benoitc/http-parser/
 
+.. image::
+    https://secure.travis-ci.org/benoitc/http-parser.png?branch=master
+    :alt: Build Status
+    :target: https://travis-ci.org/benoitc/http-parser
+
 Requirements:
 -------------
 

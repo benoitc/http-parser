@@ -374,10 +374,11 @@ class HttpParser(object):
 
         # detect encoding and set decompress object
         encoding = self._headers.get('content-encoding')
-        if encoding == "gzip":
-            self.__decompress_obj = zlib.decompressobj(16+zlib.MAX_WBITS)
-        elif encoding == "deflate":
-            self.__decompress_obj = zlib.decompressobj()
+        if self.decompress:
+            if encoding == "gzip":
+                self.__decompress_obj = zlib.decompressobj(16+zlib.MAX_WBITS)
+            elif encoding == "deflate":
+                self.__decompress_obj = zlib.decompressobj()
 
         rest = data[idx+4:]
         self._buf = [rest]

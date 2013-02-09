@@ -158,5 +158,3 @@ def run_setup(with_binary):
 
 if __name__ == "__main__":
     run_setup(not IS_PYPY)
-
-

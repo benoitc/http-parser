@@ -8,8 +8,17 @@ from io import DEFAULT_BUFFER_SIZE, RawIOBase
 
 from http_parser.util import StringIO
 
+class ReaderBase(RawIOBase):
 
-class HttpBodyReader(RawIOBase):
+    def _checkClosed(self, msg=None):
+        """Internal: raise an ValueError if file is closed
+        """
+        if self.closed:
+            raise ValueError("I/O operation on closed file."
+                             if msg is None else msg)
+
+
+class HttpBodyReader(ReaderBase):
     """ Raw implementation to stream http body """
 
     def __init__(self, http_stream):
@@ -60,7 +69,7 @@ class HttpBodyReader(RawIOBase):
         RawIOBase.close(self)
         self.http_stream = None
 
-class IterReader(RawIOBase):
+class IterReader(ReaderBase):
     """ A raw reader implementation for iterable """
     def __init__(self, iterable):
         self.iter = iter(iterable)
@@ -90,6 +99,13 @@ class IterReader(RawIOBase):
             return
         RawIOBase.close(self)
         self.iter = None
+
+    def _checkClosed(self, msg=None):
+        """Internal: raise an ValueError if file is closed
+        """
+        if self.closed:
+            raise ValueError("I/O operation on closed file."
+                             if msg is None else msg)
 
 class StringReader(IterReader):
     """ a raw reader for strings or StringIO.StringIO,

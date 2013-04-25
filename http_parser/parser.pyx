@@ -114,7 +114,7 @@ cdef int on_headers_complete_cb(http_parser *parser):
         else:
             res.decompress = False
 
-    return 0
+    return res.header_only and 1 or 0
 
 cdef int on_message_begin_cb(http_parser *parser):
     res = <object>parser.data
@@ -142,10 +142,11 @@ cdef int on_message_complete_cb(http_parser *parser):
 
 class _ParserData(object):
 
-    def __init__(self, decompress=False):
+    def __init__(self, decompress=False, header_only=False):
         self.url = ""
         self.body = []
         self.headers = IOrderedDict()
+        self.header_only = header_only
 
         self.decompress = decompress
         self.decompressobj = None
@@ -172,7 +173,7 @@ cdef class HttpParser:
     cdef str _fragment
     cdef object _parsed_url
 
-    def __init__(self, kind=2, decompress=False):
+    def __init__(self, kind=2, decompress=False, header_only=False):
         """ constructor of HttpParser object.
         :
         attr kind: Int,  could be 0 to parseonly requests,
@@ -190,7 +191,7 @@ cdef class HttpParser:
 
         # initialize parser
         http_parser_init(&self._parser, parser_type)
-        self._data = _ParserData(decompress=decompress)
+        self._data = _ParserData(decompress=decompress, header_only=header_only)
         self._parser.data = <void *>self._data
         self._parsed_url = None
         self._path = ""

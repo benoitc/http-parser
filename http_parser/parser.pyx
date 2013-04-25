@@ -29,6 +29,8 @@ cdef extern from "http_parser.h" nogil:
         HTTP_NOTIFY, HTTP_SUBSCRIBE, HTTP_UNSUBSCRIBE, HTTP_PATCH,
         HTTP_PURGE
 
+    cdef enum http_errno:
+        HPE_OK, HPE_UNKNOWN
 
     cdef enum http_parser_type:
         HTTP_REQUEST, HTTP_RESPONSE, HTTP_BOTH
@@ -39,6 +41,7 @@ cdef extern from "http_parser.h" nogil:
         unsigned short http_minor
         unsigned short status_code
         unsigned char method
+        unsigned char http_errno
         char upgrade
         void *data
 
@@ -64,6 +67,10 @@ cdef extern from "http_parser.h" nogil:
     int http_should_keep_alive(http_parser *parser)
 
     char *http_method_str(http_method)
+
+    char *http_errno_name(http_errno)
+
+    char *http_errno_description(http_errno)
 
 
 
@@ -114,7 +121,7 @@ cdef int on_headers_complete_cb(http_parser *parser):
         else:
             res.decompress = False
 
-    return 0
+    return res.header_only and 1 or 0
 
 cdef int on_message_begin_cb(http_parser *parser):
     res = <object>parser.data
@@ -140,12 +147,24 @@ cdef int on_message_complete_cb(http_parser *parser):
     return 0
 
 
+def get_errno_name(errno):
+    if not HPE_OK <= errno <= HPE_UNKNOWN:
+        raise ValueError('errno out of range')
+    return http_errno_name(<http_errno>errno)
+
+def get_errno_description(errno):
+    if not HPE_OK <= errno <= HPE_UNKNOWN:
+        raise ValueError('errno out of range')
+    return http_errno_description(<http_errno>errno)
+
+
 class _ParserData(object):
 
-    def __init__(self, decompress=False):
+    def __init__(self, decompress=False, header_only=False):
         self.url = ""
         self.body = []
         self.headers = IOrderedDict()
+        self.header_only = header_only
 
         self.decompress = decompress
         self.decompressobj = None
@@ -172,7 +191,7 @@ cdef class HttpParser:
     cdef str _fragment
     cdef object _parsed_url
 
-    def __init__(self, kind=2, decompress=False):
+    def __init__(self, kind=2, decompress=False, header_only=False):
         """ constructor of HttpParser object.
         :
         attr kind: Int,  could be 0 to parseonly requests,
@@ -190,7 +209,7 @@ cdef class HttpParser:
 
         # initialize parser
         http_parser_init(&self._parser, parser_type)
-        self._data = _ParserData(decompress=decompress)
+        self._data = _ParserData(decompress=decompress, header_only=header_only)
         self._parser.data = <void *>self._data
         self._parsed_url = None
         self._path = ""
@@ -216,6 +235,10 @@ cdef class HttpParser:
         """
         return http_parser_execute(&self._parser, &self._settings,
                 data, length)
+
+    def get_errno(self):
+        """ get error state """
+        return self._parser.http_errno
 
     def get_version(self):
         """ get HTTP version """

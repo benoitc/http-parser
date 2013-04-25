@@ -29,6 +29,8 @@ cdef extern from "http_parser.h" nogil:
         HTTP_NOTIFY, HTTP_SUBSCRIBE, HTTP_UNSUBSCRIBE, HTTP_PATCH,
         HTTP_PURGE
 
+    cdef enum http_errno:
+        HPE_OK, HPE_UNKNOWN
 
     cdef enum http_parser_type:
         HTTP_REQUEST, HTTP_RESPONSE, HTTP_BOTH
@@ -39,6 +41,7 @@ cdef extern from "http_parser.h" nogil:
         unsigned short http_minor
         unsigned short status_code
         unsigned char method
+        unsigned char http_errno
         char upgrade
         void *data
 
@@ -64,6 +67,10 @@ cdef extern from "http_parser.h" nogil:
     int http_should_keep_alive(http_parser *parser)
 
     char *http_method_str(http_method)
+
+    char *http_errno_name(http_errno)
+
+    char *http_errno_description(http_errno)
 
 
 
@@ -138,6 +145,17 @@ cdef int on_message_complete_cb(http_parser *parser):
     res = <object>parser.data
     res.message_complete = True
     return 0
+
+
+def get_errno_name(errno):
+    if not HPE_OK <= errno <= HPE_UNKNOWN:
+        raise ValueError('errno out of range')
+    return http_errno_name(<http_errno>errno)
+
+def get_errno_description(errno):
+    if not HPE_OK <= errno <= HPE_UNKNOWN:
+        raise ValueError('errno out of range')
+    return http_errno_description(<http_errno>errno)
 
 
 class _ParserData(object):
@@ -216,6 +234,10 @@ cdef class HttpParser:
         """
         return http_parser_execute(&self._parser, &self._settings,
                 data, length)
+
+    def get_errno(self):
+        """ get error state """
+        return self._parser.http_errno
 
     def get_version(self):
         """ get HTTP version """

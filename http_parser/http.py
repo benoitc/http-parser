@@ -86,6 +86,9 @@ class HttpStream(object):
     def _wait_on_status(self):
         return self._wait_status_line(self.parser.get_status_code)
 
+    def _wait_on_method(self):
+        return self._wait_status_line(self.parser.get_method)
+
     def url(self):
         """ get full url of the request """
         self._wait_on_url()
@@ -125,7 +128,7 @@ class HttpStream(object):
 
     def method(self):
         """ get HTTP method as string"""
-        self._wait_on_status()
+        self._wait_on_method()
         return self.parser.get_method()
 
     def headers(self):

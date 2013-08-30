@@ -110,6 +110,7 @@ cdef int on_headers_complete_cb(http_parser *parser):
         encoding = res.headers.get('content-encoding')
         if encoding == 'gzip':
             res.decompressobj = zlib.decompressobj(16+zlib.MAX_WBITS)
+            res._decompress_first_try = False
             del res.headers['content-encoding']
         elif encoding == 'deflate':
             res.decompressobj = zlib.decompressobj()
@@ -133,7 +134,16 @@ cdef int on_body_cb(http_parser *parser, char *at,
 
     # decompress the value if needed
     if res.decompress:
-        value = res.decompressobj.decompress(value)
+        if not res._decompress_first_try:
+            value = res.decompressobj.decompress(value)
+        else:
+            try:
+                value = res.decompressobj.decompress(value)
+            except zlib.error:
+                res.decompressobj = zlib.decompressobj(-zlib.MAX_WBITS)
+                value = res.decompressobj.decompress(value)
+                res._decompress_first_try = False
+
     res.body.append(value)
     return 0
 
@@ -152,6 +162,7 @@ class _ParserData(object):
 
         self.decompress = decompress
         self.decompressobj = None
+        self._decompress_first_try = True
 
         self.chunked = False
 

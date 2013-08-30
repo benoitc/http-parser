@@ -51,18 +51,10 @@
 # define ELEM_AT(a, i, v) ((unsigned int) (i) < ARRAY_SIZE(a) ? (a)[(i)] : (v))
 #endif
 
-#if HTTP_PARSER_DEBUG
-#define SET_ERRNO(e)                                                 \
-do {                                                                 \
-  parser->http_errno = (e);                                          \
-  parser->error_lineno = __LINE__;                                   \
-} while (0)
-#else
 #define SET_ERRNO(e)                                                 \
 do {                                                                 \
   parser->http_errno = (e);                                          \
 } while(0)
-#endif
 
 
 /* Run the notify callback FOR, returning ER if it fails */
@@ -874,6 +866,7 @@ size_t http_parser_execute (http_parser *parser,
       case s_res_line_almost_done:
         STRICT_CHECK(ch != LF);
         parser->state = s_header_field_start;
+        CALLBACK_NOTIFY(status_complete);
         break;
 
       case s_start_req:
@@ -936,6 +929,7 @@ size_t http_parser_execute (http_parser *parser,
           } else if (parser->index == 2  && ch == 'P') {
             parser->method = HTTP_COPY;
           } else {
+            SET_ERRNO(HPE_INVALID_METHOD);
             goto error;
           }
         } else if (parser->method == HTTP_MKCOL) {
@@ -948,12 +942,14 @@ size_t http_parser_execute (http_parser *parser,
           } else if (parser->index == 2 && ch == 'A') {
             parser->method = HTTP_MKACTIVITY;
           } else {
+            SET_ERRNO(HPE_INVALID_METHOD);
             goto error;
           }
         } else if (parser->method == HTTP_SUBSCRIBE) {
           if (parser->index == 1 && ch == 'E') {
             parser->method = HTTP_SEARCH;
           } else {
+            SET_ERRNO(HPE_INVALID_METHOD);
             goto error;
           }
         } else if (parser->index == 1 && parser->method == HTTP_POST) {
@@ -964,13 +960,27 @@ size_t http_parser_execute (http_parser *parser,
           } else if (ch == 'A') {
             parser->method = HTTP_PATCH;
           } else {
+            SET_ERRNO(HPE_INVALID_METHOD);
             goto error;
           }
         } else if (parser->index == 2) {
           if (parser->method == HTTP_PUT) {
-            if (ch == 'R') parser->method = HTTP_PURGE;
+            if (ch == 'R') {
+              parser->method = HTTP_PURGE;
+            } else {
+              SET_ERRNO(HPE_INVALID_METHOD);
+              goto error;
+            }
           } else if (parser->method == HTTP_UNLOCK) {
-            if (ch == 'S') parser->method = HTTP_UNSUBSCRIBE;
+            if (ch == 'S') {
+              parser->method = HTTP_UNSUBSCRIBE;
+            } else {
+              SET_ERRNO(HPE_INVALID_METHOD);
+              goto error;
+            }
+          } else {
+            SET_ERRNO(HPE_INVALID_METHOD);
+            goto error;
           }
         } else if (parser->index == 4 && parser->method == HTTP_PROPFIND && ch == 'P') {
           parser->method = HTTP_PROPPATCH;
@@ -1970,7 +1980,7 @@ http_parse_host_char(enum http_host_state s, const char ch) {
 
     /* FALLTHROUGH */
     case s_http_host_v6_start:
-      if (IS_HEX(ch) || ch == ':') {
+      if (IS_HEX(ch) || ch == ':' || ch == '.') {
         return s_http_host_v6;
       }
 
@@ -2179,4 +2189,11 @@ http_parser_pause(http_parser *parser, int paused) {
 int
 http_body_is_final(const struct http_parser *parser) {
     return parser->state == s_message_done;
+}
+
+unsigned long
+http_parser_version(void) {
+  return HTTP_PARSER_VERSION_MAJOR * 0x10000 |
+         HTTP_PARSER_VERSION_MINOR * 0x00100 |
+         HTTP_PARSER_VERSION_PATCH * 0x00001;
 }

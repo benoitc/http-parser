@@ -3,7 +3,7 @@ http-parser
 
 HTTP request/response parser for Python compatible with Python 2.x
 (>=2.6), Python 3 and Pypy. If possible a C parser based on
-http-parser_ from Ryan Dahl will be used. 
+http-parser_ from Ryan Dahl will be used.
 
 http-parser is under the MIT license.
 
@@ -55,7 +55,7 @@ Example of HttpStream
 +++++++++++++++++++++
 
 ex::
-    
+
     #!/usr/bin/env python
     import socket
 
@@ -81,7 +81,7 @@ Example of HttpParser:
 ++++++++++++++++++++++
 
 ::
-    
+
     #!/usr/bin/env python
     import socket
 
@@ -100,7 +100,7 @@ Example of HttpParser:
         try:
             s.connect(('gunicorn.org', 80))
             s.send("GET / HTTP/1.1\r\nHost: gunicorn.org\r\n\r\n")
-            
+
             while True:
                 data = s.recv(1024)
                 if not data:
@@ -120,7 +120,7 @@ Example of HttpParser:
                     break
 
             print "".join(body)
-        
+
         finally:
             s.close()
 
@@ -134,7 +134,7 @@ You can find more docs in the code (or use a doc generator).
 Copyright
 ---------
 
-2011,2012 (c) Benoît Chesneau <benoitc@e-engura.org>
+2011-2013 (c) Benoît Chesneau <benoitc@e-engura.org>
 
 
 .. http-parser_ https://github.com/ry/http-parser

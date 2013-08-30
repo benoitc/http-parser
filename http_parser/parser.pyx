@@ -20,6 +20,8 @@ cdef extern from "pyversion_compat.h":
 from cpython cimport PyBytes_FromStringAndSize
 
 cdef extern from "http_parser.h" nogil:
+    cdef enum http_errno:
+        HPE_OK, HPE_UNKNOWN
 
     cdef enum http_method:
         HTTP_DELETE, HTTP_GET, HTTP_HEAD, HTTP_POST, HTTP_PUT,
@@ -28,7 +30,6 @@ cdef extern from "http_parser.h" nogil:
         HTTP_REPORT, HTTP_MKACTIVITY, HTTP_CHECKOUT, HTTP_MERGE, HTTP_MSEARCH,
         HTTP_NOTIFY, HTTP_SUBSCRIBE, HTTP_UNSUBSCRIBE, HTTP_PATCH,
         HTTP_PURGE
-
 
     cdef enum http_parser_type:
         HTTP_REQUEST, HTTP_RESPONSE, HTTP_BOTH
@@ -39,6 +40,7 @@ cdef extern from "http_parser.h" nogil:
         unsigned short http_minor
         unsigned short status_code
         unsigned char method
+        unsigned char http_errno
         char upgrade
         void *data
 
@@ -65,7 +67,9 @@ cdef extern from "http_parser.h" nogil:
 
     char *http_method_str(http_method)
 
+    char *http_errno_name(http_errno)
 
+    char *http_errno_description(http_errno)
 
 
 cdef int on_url_cb(http_parser *parser, char *at,
@@ -153,6 +157,17 @@ cdef int on_message_complete_cb(http_parser *parser):
     return 0
 
 
+def get_errno_name(errno):
+    if not HPE_OK <= errno <= HPE_UNKNOWN:
+        raise ValueError('errno out of range')
+    return http_errno_name(<http_errno>errno)
+
+def get_errno_description(errno):
+    if not HPE_OK <= errno <= HPE_UNKNOWN:
+        raise ValueError('errno out of range')
+    return http_errno_description(<http_errno>errno)
+
+
 class _ParserData(object):
 
     def __init__(self, decompress=False):
@@ -231,6 +246,10 @@ cdef class HttpParser:
         return http_parser_execute(&self._parser, &self._settings,
                 data, length)
 
+    def get_errno(self):
+        """ get error state """
+        return self._parser.http_errno
+
     def get_version(self):
         """ get HTTP version """
         return (self._parser.http_major, self._parser.http_minor)
@@ -238,8 +257,6 @@ cdef class HttpParser:
     def get_method(self):
         """ get HTTP method as string"""
         return http_method_str(<http_method>self._parser.method)
-
-
 
     def get_status_code(self):
         """ get status code of a response as integer """

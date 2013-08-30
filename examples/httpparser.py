@@ -29,6 +29,7 @@ def main():
             if p.is_headers_complete() and not header_done:
                 print(p.get_headers())
                 print(p.get_headers()['content-length'])
+                print(p.get_method())
                 header_done = True
 
             if p.is_partial_body():

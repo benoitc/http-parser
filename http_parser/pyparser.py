@@ -74,6 +74,7 @@ class HttpParser(object):
         self.__on_message_complete = False
 
         self.__decompress_obj = None
+        self.__decompress_first_try = True
 
     def get_version(self):
         return self._version
@@ -384,6 +385,7 @@ class HttpParser(object):
         if self.decompress:
             if encoding == "gzip":
                 self.__decompress_obj = zlib.decompressobj(16+zlib.MAX_WBITS)
+                self.__decompress_first_try = False
             elif encoding == "deflate":
                 self.__decompress_obj = zlib.decompressobj()
 
@@ -399,7 +401,16 @@ class HttpParser(object):
 
             # maybe decompress
             if self.__decompress_obj is not None:
-                body_part = self.__decompress_obj.decompress(body_part)
+                if not self.__decompress_first_try:
+                    body_part = self.__decompress_obj.decompress(body_part)
+                else:
+                    try:
+                        body_part = self.__decompress_obj.decompress(body_part)
+                    except zlib.error:
+                        res.decompressobj = zlib.decompressobj(-zlib.MAX_WBITS)
+                        body_part = self.__decompress_obj.decompress(body_part)
+                    self.__decompress_first_try = False
+
 
             self._partial_body = True
             self._body.append(body_part)

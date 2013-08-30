@@ -142,7 +142,7 @@ cdef int on_body_cb(http_parser *parser, char *at,
             except zlib.error:
                 res.decompressobj = zlib.decompressobj(-zlib.MAX_WBITS)
                 value = res.decompressobj.decompress(value)
-                res._decompress_first_try = False
+            res._decompress_first_try = False
 
     res.body.append(value)
     return 0

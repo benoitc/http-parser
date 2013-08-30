@@ -137,7 +137,8 @@ class HttpStream(object):
         OrderedDict that allows you to get value using insensitive
         keys."""
         self._check_headers_complete()
-        return self.parser.get_headers()
+        headers = self.parser.get_headers()
+        return headers.copy()
 
     def should_keep_alive(self):
         """ return True if the connection should be kept alive

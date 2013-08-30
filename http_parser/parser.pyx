@@ -257,7 +257,7 @@ cdef class HttpParser:
 
     def get_method(self):
         """ get HTTP method as string"""
-        return http_method_str(<http_method>self._parser.method)
+        return bytes_to_str(http_method_str(<http_method>self._parser.method))
 
     def get_status_code(self):
         """ get status code of a response as integer """

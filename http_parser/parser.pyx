@@ -90,9 +90,9 @@ cdef int on_header_value_cb(http_parser *parser, char *at,
     res = <object>parser.data
     header_value = bytes_to_str(PyBytes_FromStringAndSize(at, length))
 
-    if res._last_field in res.headers:
-        header_value = "%s, %s" % (res.headers[res._last_field],
-                header_value)
+    if len(res.headers.get(res._last_field,"")):
+        hsep = " " if res._last_was_value else ", "
+        header_value = hsep.join([res.headers[res._last_field], header_value])
 
         # add to headers
     res.headers[res._last_field] = header_value

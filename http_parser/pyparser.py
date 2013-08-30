@@ -340,11 +340,18 @@ class HttpParser(object):
             name = name.rstrip(" \t").upper()
             if HEADER_RE.search(name):
                 raise InvalidHeader("invalid header name %s" % name)
+
+            if value.endswith("\r\n"):
+                value = value[:-2]
+
             name, value = name.strip(), [value.lstrip()]
 
             # Consume value continuation lines
             while len(lines) and lines[0].startswith((" ", "\t")):
-                value.append(lines.pop(0))
+                curr = lines.pop(0)
+                if curr.endswith("\r\n"):
+                    curr = curr[:-2]
+                value.append(curr)
             value = ''.join(value).rstrip()
 
             # multiple headers

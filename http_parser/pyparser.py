@@ -324,6 +324,11 @@ class HttpParser(object):
                 "SERVER_PROTOCOL": bits[2]})
 
     def _parse_headers(self, data):
+        if data == b'\r\n':
+            self.__on_headers_complete = True
+            self.__on_message_begin = True
+            self._buf = []
+            return 0
         idx = data.find(b("\r\n\r\n"))
         if idx < 0: # we don't have all headers
             if self._status_code == 204 and data == b("\r\n"):

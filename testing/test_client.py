@@ -25,15 +25,15 @@ def _test_headers(parser):
     assert parser.is_partial_body()
     assert parser.is_message_complete()
 
-def test_no_headers():
+def test_client_no_headers():
     _test_no_headers(HttpParser())
 
-def test_no_headers_py():
+def test_client_no_headers_py():
     _test_no_headers(PyHttpParser())
 
-def test_headers():
+def test_client_headers():
     _test_headers(HttpParser())
 
-def test_headers_py():
+def test_client_headers_py():
     _test_headers(PyHttpParser())
 

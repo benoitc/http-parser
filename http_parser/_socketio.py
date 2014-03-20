@@ -129,7 +129,6 @@ class SocketIO(io.RawIOBase):
         if self.closed:
             return
         io.RawIOBase.close(self)
-        self._sock._decref_socketios()
         self._sock = None
 
     def _checkClosed(self, msg=None):

@@ -407,7 +407,7 @@ class HttpParser(object):
                     try:
                         body_part = self.__decompress_obj.decompress(body_part)
                     except zlib.error:
-                        res.decompressobj = zlib.decompressobj(-zlib.MAX_WBITS)
+                        self.__decompress_obj.decompressobj = zlib.decompressobj(-zlib.MAX_WBITS)
                         body_part = self.__decompress_obj.decompress(body_part)
                     self.__decompress_first_try = False
 

@@ -75,7 +75,7 @@ cdef extern from "http_parser.h" nogil:
 cdef int on_url_cb(http_parser *parser, char *at,
         size_t length):
     res = <object>parser.data
-    res.url = bytes_to_str(PyBytes_FromStringAndSize(at, length))
+    res.url += bytes_to_str(PyBytes_FromStringAndSize(at, length))
     return 0
 
 cdef int on_header_field_cb(http_parser *parser, char *at,

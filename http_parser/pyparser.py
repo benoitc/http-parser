@@ -155,7 +155,7 @@ class HttpParser(object):
     def is_upgrade(self):
         """ Do we get upgrade header in the request. Useful for
         websockets """
-        return self._headers.get('connection', "") == "upgrade"
+        return self._headers.get('connection', "").lower() == "upgrade"
 
     def is_headers_complete(self):
         """ return True if all headers have been parsed. """

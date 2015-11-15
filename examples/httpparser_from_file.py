@@ -13,4 +13,4 @@ if __name__ == '__main__':
     rsp = rsp.replace('\n', '\r\n')
     p = HttpParser()
     p.execute(rsp, len(rsp))
-    print p.get_headers()
+    print(p.get_headers())

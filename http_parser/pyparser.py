@@ -323,6 +323,8 @@ class HttpParser(object):
 
     def _parse_headers(self, data):
         idx = data.find(b("\r\n\r\n"))
+        if idx < 0:
+            idx = data.find(b("\n\n"))
         if idx < 0: # we don't have all headers
             return False
 

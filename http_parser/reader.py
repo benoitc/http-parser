@@ -8,6 +8,7 @@ from io import DEFAULT_BUFFER_SIZE, RawIOBase
 
 from http_parser.util import StringIO
 
+import types
 
 class HttpBodyReader(RawIOBase):
     """ Raw implementation to stream http body """

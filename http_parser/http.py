@@ -5,10 +5,15 @@
 
 from io import DEFAULT_BUFFER_SIZE, BufferedReader, TextIOWrapper
 
-try:
-    from http_parser.parser import HttpParser
-except ImportError:
+import socket
+if socket.socket.__module__ == 'gevent.socket':
+    # gevent monkey-patching is active, using python implementation
     from http_parser.pyparser import HttpParser
+else:
+    try:
+        from http_parser.parser import HttpParser
+    except ImportError:
+        from http_parser.pyparser import HttpParser
 
 from http_parser.reader import HttpBodyReader
 from http_parser.util import status_reasons, bytes_to_str

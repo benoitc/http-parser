@@ -19,3 +19,4 @@ nohup.out
 doc/.sass-cache
 http_parser/__pycache__
 MANIFEST
+.pytest_cache/

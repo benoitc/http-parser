@@ -4,8 +4,6 @@ python:
   - 2.6
   - 2.7
   - 3.7
-    dist: xenial
-    sudo: true
   - pypy
   - pypy3
 

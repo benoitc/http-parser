@@ -12,7 +12,3 @@ install:
   - python setup.py install
 
 script: py.test testing/
-
-branches:
-  only:
-    - master

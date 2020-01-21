@@ -12,7 +12,7 @@ except ImportError:
     from collections import MutableMapping
 
 
-if sys.version_info[0] == 3:
+if sys.version_info[0] >= 3:
     from urllib.parse import unquote
     def b(s):
         return s.encode("latin-1")

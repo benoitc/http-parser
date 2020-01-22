@@ -1,0 +1,8 @@
+# This file is renamed to "setup.toml.dev" in release tarballs so that
+# Pip won't try to use it.
+
+[build-system]
+# In addition to setuptools and wheel, we need modern Cython, because we are
+# not a packaged release.
+requires = ["setuptools", "wheel", "cython>=0.28.3"]
+

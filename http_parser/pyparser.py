@@ -222,7 +222,7 @@ class HttpParser(object):
                 try:
                     to_parse = b("").join(self._buf)
                     ret = self._parse_headers(to_parse)
-                    if not ret:
+                    if type(ret) is bool and not ret:
                         return length
                     nb_parsed = nb_parsed + (len(to_parse) - ret)
                 except InvalidHeader as e:
@@ -324,7 +324,12 @@ class HttpParser(object):
     def _parse_headers(self, data):
         idx = data.find(b("\r\n\r\n"))
         if idx < 0: # we don't have all headers
-            return False
+            if self._status_code == 204 and data == b("\r\n"):
+                self._buf = []
+                self.__on_headers_complete = True
+                return 0
+            else:
+                return False
 
         # Split lines on \r\n keeping the \r\n on each line
         lines = [bytes_to_str(line) + "\r\n" for line in
@@ -395,7 +400,10 @@ class HttpParser(object):
         return len(rest)
 
     def _parse_body(self):
-        if not self._chunked:
+        if self._status_code == 204 and len(self._buf) == 0:
+            self.__on_message_complete = True
+            return
+        elif not self._chunked:
             body_part = b("").join(self._buf)
             self._clen_rest -= len(body_part)
 

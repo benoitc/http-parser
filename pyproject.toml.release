@@ -1,0 +1,7 @@
+# This file is renamed to "setup.toml" in release tarballs so that
+# Pip will use it.
+
+[build-system]
+# Release packages only need the standard setuptools and wheel.
+requires = ["setuptools", "wheel"]
+

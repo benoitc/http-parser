@@ -16,7 +16,7 @@ import shutil
 import sys
 import traceback
 
-from setuptools import setup, find_packages, Extension, Feature
+from setuptools import setup, find_packages, Extension
 
 if not hasattr(sys, 'version_info') or \
         sys.version_info < (2, 6, 0, 'final'):

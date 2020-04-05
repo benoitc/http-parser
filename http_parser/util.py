@@ -5,9 +5,14 @@
 
 
 import sys
-from collections import MutableMapping
+try:
+    # Python 3.3+
+    from collections.abc import MutableMapping
+except ImportError:
+    from collections import MutableMapping
 
-if sys.version_info[0] == 3:
+
+if sys.version_info[0] >= 3:
     from urllib.parse import unquote
     def b(s):
         return s.encode("latin-1")

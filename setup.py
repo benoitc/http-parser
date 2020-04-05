@@ -82,12 +82,16 @@ class sdist(_sdist):
         if os.path.exists('Makefile'):
             make()
             os.rename('Makefile', 'Makefile.ext')
+            os.rename('pyproject.toml', 'pyproject.toml.dev')
+            os.rename('pyproject.toml.release', 'pyproject.toml')
             renamed = True
         try:
             return _sdist.run(self)
         finally:
             if renamed:
                 os.rename('Makefile.ext', 'Makefile')
+                os.rename('pyproject.toml', 'pyproject.toml.release')
+                os.rename('pyproject.toml.dev', 'pyproject.toml')
 
 class BuildFailed(Exception):
     pass

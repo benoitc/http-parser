@@ -442,7 +442,7 @@ class HttpParser(object):
             if size == 0:
                 return size
 
-            if size is None or len(rest) < size:
+            if size is None or len(rest) < size + 2:  # wait till terminator
                 return None
 
 

@@ -134,7 +134,7 @@ You can find more docs in the code (or use a doc generator).
 Copyright
 ---------
 
-2011-2013 (c) Benoît Chesneau <benoitc@e-engura.org>
+2011-2020 (c) Benoît Chesneau <benoitc@e-engura.org>
 
 
 .. http-parser_ https://github.com/ry/http-parser

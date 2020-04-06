@@ -1,2 +1,2 @@
 pytest
-cython>=0.28.3
+cython>=0.29.3

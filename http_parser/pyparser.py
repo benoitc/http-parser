@@ -330,6 +330,8 @@ class HttpParser(object):
             self._buf = []
             return 0
         idx = data.find(b("\r\n\r\n"))
+        if idx < 0:
+            idx = data.find(b("\n\n"))
         if idx < 0: # we don't have all headers
             if self._status_code == 204 and data == b("\r\n"):
                 self._buf = []

@@ -4,10 +4,6 @@
 # See the NOTICE for more information.
 
 from __future__ import with_statement
-from distutils.errors import CCompilerError, DistutilsExecError, \
-    DistutilsPlatformError
-from distutils.command.build_ext import build_ext
-from distutils.command.sdist import sdist as _sdist
 import glob
 from imp import load_source
 import io
@@ -17,6 +13,10 @@ import sys
 import traceback
 
 from setuptools import setup, find_packages, Extension
+from distutils.errors import CCompilerError, DistutilsExecError, \
+    DistutilsPlatformError
+from distutils.command.build_ext import build_ext
+from distutils.command.sdist import sdist as _sdist
 
 if not hasattr(sys, 'version_info') or \
         sys.version_info < (2, 6, 0, 'final'):

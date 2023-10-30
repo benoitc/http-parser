@@ -18,6 +18,7 @@ Requirements:
 -------------
 
 - Python 2.7 or sup. Pypy latest version.
+- Python-Dev (if missing this, you may get an error that you Python.h cannot be found)
 - Cython if you need to rebuild the C code (Not needed for Pypy)
 
 Installation
